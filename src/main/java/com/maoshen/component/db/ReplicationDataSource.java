@@ -1,4 +1,4 @@
-package com.maoshen.db;
+package com.maoshen.component.db;
 
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 

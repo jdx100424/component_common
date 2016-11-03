@@ -1,4 +1,4 @@
-package com.maoshen.db;
+package com.maoshen.component.db;
 
 public class ReplicationDataSourceHolder {
     public static final ThreadLocal<String> holder = new ThreadLocal<String>();
