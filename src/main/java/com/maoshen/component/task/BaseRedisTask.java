@@ -1,5 +1,7 @@
 package com.maoshen.component.task;
 
+import java.util.Date;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,9 @@ public abstract class BaseRedisTask extends BaseTask {
 		if (StringUtils.isNotBlank(getName())) {
 			if (jedisTemplate.opsForValue().setIfAbsent(getName(), "true")) {
 				try {
+					LOGGER.info(Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " run start,date is:"+new Date());
 					timeTaskRun();
+					LOGGER.info(Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " run end,date is:"+new Date());
 				} catch (Exception e) {
 					LOGGER.error(this.getClass() + "_" + this.getName() + " run timeTaskError", e);
 				} finally {
