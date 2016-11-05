@@ -42,11 +42,18 @@
 		<commons-pool2.version>2.4.2</commons-pool2.version>
 		<slf4j-log4j12.version>1.7.7</slf4j-log4j12.version>
 		<slf4j-api.version>1.7.7</slf4j-api.version>
+		
+		<json-alibaba>1.2.7</json-alibaba>
 	</properties>
 
 
 
 	<dependencies>
+		<dependency>
+   			<groupId>com.alibaba</groupId>
+    		<artifactId>fastjson</artifactId>
+    		<version>${json-alibaba}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
