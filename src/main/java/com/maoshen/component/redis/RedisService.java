@@ -46,8 +46,12 @@ public class RedisService {
 	@Autowired
 	private RedisTemplate jedisTemplate;
 
-	public RedisTemplate getRedisTemplate() {
+	public RedisTemplate getJedisTemplate() {
 		return jedisTemplate;
+	}
+	
+	public void setJedisTemplate(RedisTemplate jedisTemplate) {
+		this.jedisTemplate = jedisTemplate;
 	}
 
 	@SuppressWarnings("unchecked")
