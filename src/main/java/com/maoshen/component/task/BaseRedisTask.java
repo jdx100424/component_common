@@ -27,7 +27,8 @@ public abstract class BaseRedisTask extends BaseTask {
 
 	@SuppressWarnings("unchecked") 
 	public void doJob() {
-		if (StringUtils.isNotBlank(getName())) {
+		LOGGER.info(getName() + "_"+Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " this thread is running,date is:"+new Date());
+		if (StringUtils.isNotBlank(getName())) {			
 			if (jedisTemplate.opsForValue().setIfAbsent(getName(), "true")) {
 				try {
 					LOGGER.info(Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " run start,date is:"+new Date());
