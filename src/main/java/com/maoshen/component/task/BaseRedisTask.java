@@ -14,6 +14,40 @@ import org.springframework.data.redis.core.RedisTemplate;
  * https://my.oschina.net/lese/blog/308709
  * @author daxian.jianglifesense.com
  *
+<!-- jedis pool配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+
+	</bean>
+	<bean id="jedisFactory"
+		class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="usePool" value="true" />
+		<property name="hostName" value="127.0.0.1" />
+		<property name="password" value="" />
+		<property name="port" value="6379" />
+		<constructor-arg index="0" ref="jedisPoolConfig" />
+	</bean>
+	<!-- spring data redis -->
+	<bean id="jedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisFactory" />
+		<property name="keySerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="hashKeySerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+	</bean>
+	
+	<!-- task -->
+	<task:annotation-driven /> <!-- 定时器开关-->  
+    <bean id="echoTask" class="com.maoshen.echo.task.EchoTask"></bean>  
+    <task:scheduled-tasks>  
+        <!--  
+            这里表示的是每隔五秒执行一次  
+        -->  
+        <task:scheduled ref="echoTask" method="doJob" cron="0 0/1 * * * ?" />  
+    </task:scheduled-tasks>  
  */
 public abstract class BaseRedisTask extends BaseTask {
 	private static final Logger LOGGER = Logger.getLogger(BaseRedisTask.class);
@@ -30,6 +64,13 @@ public abstract class BaseRedisTask extends BaseTask {
 		LOGGER.info(getName() + "_"+Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " this thread is running,date is:"+new Date());
 		if (StringUtils.isNotBlank(getName())) {			
 			if (jedisTemplate.opsForValue().setIfAbsent(getName(), "true")) {
+				//如果用户没有定义超时时间或者值为0，会使用默认值
+				if(getExpireTime()!=null && getExpireTime()>0){
+					jedisTemplate.expire(getName(), getExpireTime(), TIME_UNIT);
+				}else{
+					jedisTemplate.expire(getName(), DEFAULT_EXPIRE_TIME, TIME_UNIT);
+				}
+				
 				try {
 					LOGGER.info(Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " run start,date is:"+new Date());
 					timeTaskRun();
@@ -39,7 +80,11 @@ public abstract class BaseRedisTask extends BaseTask {
 				} finally {
 					jedisTemplate.delete(getName());
 				}
+			}else{
+				LOGGER.warn("其他服务器的定时器正在运行。");
 			}
+		}else{
+			LOGGER.error("不定义定时器在REDIS的KEY名字，定时器不给运行");
 		}
 	}
 }
