@@ -24,7 +24,7 @@
 		<testng.version>6.8.5</testng.version>
 		<mockito.version>1.9.5</mockito.version>
 		<!-- Spring Framework -->
-		<spring.version>4.1.7.RELEASE</spring.version>
+		<spring.version>4.2.5.RELEASE</spring.version>
 		<aspect.version>1.7.4</aspect.version>
 
 		<!-- redis -->
@@ -44,11 +44,18 @@
 		<slf4j-api.version>1.7.7</slf4j-api.version>
 		
 		<json-alibaba>1.2.7</json-alibaba>
+		<kafka.version>0.9.0.0</kafka.version>
 	</properties>
 
 
 
 	<dependencies>
+	
+	 	<dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.10</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
 		<dependency>
    			<groupId>com.alibaba</groupId>
     		<artifactId>fastjson</artifactId>
