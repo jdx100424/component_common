@@ -37,6 +37,7 @@ public class TestConsumer {
 		while (true) {
 			ConsumerRecords<String, String> records = consumer.poll(10000);
 			for (ConsumerRecord<String, String> record : records) {
+				
 				// 正常这里应该使用线程池处理，不应该在这里处理
 				System.out.println(
 						"offset = " + record.offset() + ", key = " + record.key() + ", value = " + record.value());
