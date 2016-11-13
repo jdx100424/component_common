@@ -1,4 +1,4 @@
-package com.maoshen.component.kafka;
+package com.maoshen.component.kafka.test;
 
 import java.util.Properties;
 import java.util.Random;
@@ -49,7 +49,7 @@ public class TestProducer {
 				TestVO testVO = new TestVO();
 				testVO.setId(i);
 				testVO.setName(UUID.randomUUID().toString());
-				producer.send(new ProducerRecord<String,String>("jdx222",testVO.getName() ,JSONObject.toJSONString(testVO)));
+				producer.send(new ProducerRecord<String,String>("jdx222111",testVO.getName() ,JSONObject.toJSONString(testVO)));
 				System.out.println("send:" + JSONObject.toJSONString(testVO));
 				Thread.sleep(2000);
 			} catch (Exception e) {

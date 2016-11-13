@@ -1,4 +1,4 @@
-package com.maoshen.component.kafka;
+package com.maoshen.component.kafka.test;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -31,11 +31,11 @@ public class TestConsumer {
 
 		KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
 		// 订阅主题列表topic
-		consumer.subscribe(Arrays.asList("jdx222"));
+		consumer.subscribe(Arrays.asList("jdx222111"));
 
 		
 		while (true) {
-			ConsumerRecords<String, String> records = consumer.poll(10000);
+			ConsumerRecords<String, String> records = consumer.poll(100);
 			for (ConsumerRecord<String, String> record : records) {
 				
 				// 正常这里应该使用线程池处理，不应该在这里处理

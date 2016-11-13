@@ -1,4 +1,4 @@
-package com.maoshen.component.kafka;
+package com.maoshen.component.kafka.test;
 
 public class TestVO {
 	private int id;
