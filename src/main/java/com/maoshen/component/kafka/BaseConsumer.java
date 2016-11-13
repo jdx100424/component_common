@@ -1,6 +1,7 @@
 package com.maoshen.component.kafka;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.dto.MessageDto;
+import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.other.ResourceUtils;
 
 /**
@@ -26,27 +28,11 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
-	
-	public BaseConsumer(String groupId, String topicName) {
+
+	public BaseConsumer() {
 		super();
-		this.groupId = groupId;
-		this.topicName = topicName;
-	}
-
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
-	}
-
-	public String getTopicName() {
-		return topicName;
-	}
-
-	public void setTopicName(String topicName) {
-		this.topicName = topicName;
+		this.groupId = getGroupIdANdTopicName().getGroupId();
+		this.topicName = getGroupIdANdTopicName().getTopicName();
 	}
 
 	@SuppressWarnings("resource")
@@ -78,6 +64,7 @@ public abstract class BaseConsumer implements InitializingBean {
 		// 使用线程监控KAFKA接收信息
 		new Thread() {
 			public void run() {
+				LOGGER.info(this.getClass().getName() + " kafka is start in:" + new Date());
 				ConsumerRecords<String, String> records = consumer.poll(10000);
 				for (ConsumerRecord<String, String> record : records) {
 					LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
@@ -104,4 +91,9 @@ public abstract class BaseConsumer implements InitializingBean {
 	 * @param dto
 	 */
 	public abstract void onMessage(MessageDto dto);
+
+	/**
+	 * 组ID,KAFKA名称
+	 */
+	public abstract MessageVo getGroupIdANdTopicName();
 }
