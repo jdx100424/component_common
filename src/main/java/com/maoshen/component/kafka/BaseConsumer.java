@@ -65,20 +65,22 @@ public abstract class BaseConsumer implements InitializingBean {
 		// 使用线程监控KAFKA接收信息
 		new Thread() {
 			public void run() {
-				LOGGER.info(this.getClass().getName() + " kafka is start in:" + new Date());
-				ConsumerRecords<String, String> records = consumer.poll(10000);
-				for (ConsumerRecord<String, String> record : records) {
-					LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
-					try {
-						String receiveStr = record.value();
-						Object receiveObject = JSONObject.parse(receiveStr);
-
-						MessageDto dto = new MessageDto();
-						dto.setMessageInfo(receiveObject);
-						dto.setRequestId(record.key());
-						onMessage(dto);
-					} catch (Exception e) {
-						LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName, e);
+				while(true){
+					LOGGER.info(this.getClass().getName() + " kafka is start in:" + new Date());
+					ConsumerRecords<String, String> records = consumer.poll(10000);
+					for (ConsumerRecord<String, String> record : records) {
+						LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
+						try {
+							String receiveStr = record.value();
+							Object receiveObject = JSONObject.parse(receiveStr);
+	
+							MessageDto dto = new MessageDto();
+							dto.setMessageInfo(receiveObject);
+							dto.setRequestId(record.key());
+							onMessage(dto);
+						} catch (Exception e) {
+							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName, e);
+						}
 					}
 				}
 			}
