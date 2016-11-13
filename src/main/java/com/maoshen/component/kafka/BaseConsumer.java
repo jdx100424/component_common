@@ -66,8 +66,7 @@ public abstract class BaseConsumer implements InitializingBean {
 		new Thread() {
 			public void run() {
 				while(true){
-					LOGGER.info(this.getClass().getName() + " kafka is start in:" + new Date());
-					ConsumerRecords<String, String> records = consumer.poll(10000);
+					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
 						LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
 						try {
