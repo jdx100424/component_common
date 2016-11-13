@@ -1,4 +1,4 @@
-package com.maoshen.component.util;
+package com.maoshen.component.json;
 
 import com.alibaba.fastjson.JSONObject;
 
