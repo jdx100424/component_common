@@ -50,10 +50,11 @@ public abstract class BaseConsumer implements InitializingBean {
 		props.put("group.id", groupId);
 		props.put("enable.auto.commit", "true");
 		props.put("auto.commit.interval.ms", "1000");
+		//props.put("auto.offset.reset", "earliest"); 
 		// 从poll(拉)的回话处理时长
 		props.put("session.timeout.ms", "30000");
 		// poll的数量限制
-		props.put("max.poll.records", "1000");
+		//props.put("max.poll.records", "1000");
 		props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 		props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
@@ -65,7 +66,7 @@ public abstract class BaseConsumer implements InitializingBean {
 		new Thread() {
 			public void run() {
 				LOGGER.info(this.getClass().getName() + " kafka is start in:" + new Date());
-				ConsumerRecords<String, String> records = consumer.poll(100);
+				ConsumerRecords<String, String> records = consumer.poll(10000);
 				for (ConsumerRecord<String, String> record : records) {
 					LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
 					try {

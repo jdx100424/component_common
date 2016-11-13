@@ -43,13 +43,13 @@ public class TestProducer {
 		// flush() ;所有缓存记录被立刻发送
 	
 		
-		for(int j=0;j<1;j++){
+		for(int j=0;j<10;j++){
 			int i=new Random().nextInt(10000)+100;
 			try {
 				TestVO testVO = new TestVO();
 				testVO.setId(i);
 				testVO.setName(UUID.randomUUID().toString());
-				producer.send(new ProducerRecord<String,String>("jdx222111",testVO.getName() ,JSONObject.toJSONString(testVO)));
+				producer.send(new ProducerRecord<String,String>("topicEcho",testVO.getName() ,JSONObject.toJSONString(testVO)));
 				System.out.println("send:" + JSONObject.toJSONString(testVO));
 				Thread.sleep(2000);
 			} catch (Exception e) {

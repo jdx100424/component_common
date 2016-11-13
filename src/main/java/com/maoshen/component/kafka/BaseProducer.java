@@ -60,6 +60,7 @@ public class BaseProducer implements InitializingBean {
 			producer = new KafkaProducer<String, String>(props);
 			String info = JSONObject.toJSONString(obj);
 			producer.send(new ProducerRecord<String, String>(topicName, UUID.randomUUID().toString(), info));
+			producer.flush();
 		} catch (Exception e) {
 			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + topicName,e);
 		} finally {
