@@ -26,6 +26,12 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
+	
+	public BaseConsumer(String groupId, String topicName) {
+		super();
+		this.groupId = groupId;
+		this.topicName = topicName;
+	}
 
 	public String getGroupId() {
 		return groupId;
