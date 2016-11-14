@@ -1,7 +1,6 @@
 package com.maoshen.component.kafka;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
