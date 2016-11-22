@@ -78,7 +78,7 @@ public abstract class BaseRedisTask extends BaseTask {
 				} catch (Exception e) {
 					LOGGER.error(this.getClass() + "_" + this.getName() + " run timeTaskError", e);
 				} finally {
-					jedisTemplate.delete(getName());
+					//jedisTemplate.delete(getName());
 				}
 			}else{
 				LOGGER.warn("其他服务器的定时器正在运行。");
