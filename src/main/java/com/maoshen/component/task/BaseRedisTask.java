@@ -3,7 +3,8 @@ package com.maoshen.component.task;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -50,7 +51,7 @@ import org.springframework.data.redis.core.RedisTemplate;
     </task:scheduled-tasks>  
  */
 public abstract class BaseRedisTask extends BaseTask {
-	private static final Logger LOGGER = Logger.getLogger(BaseRedisTask.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BaseRedisTask.class);
 	@SuppressWarnings("rawtypes")
 	@Autowired
 	private RedisTemplate jedisTemplate;

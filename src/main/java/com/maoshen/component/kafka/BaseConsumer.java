@@ -7,7 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.fastjson.JSONObject;
@@ -22,7 +23,7 @@ import com.maoshen.component.other.ResourceUtils;
  *
  */
 public abstract class BaseConsumer implements InitializingBean {
-	private static final Logger LOGGER = Logger.getLogger(BaseConsumer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BaseConsumer.class);
 	// 组ID
 	private String groupId;
 	// KAKFA消息接收名称

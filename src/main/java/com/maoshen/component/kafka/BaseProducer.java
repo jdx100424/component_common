@@ -6,7 +6,8 @@ import java.util.UUID;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.fastjson.JSONObject;
@@ -19,7 +20,7 @@ import com.maoshen.component.other.ResourceUtils;
  *
  */
 public class BaseProducer implements InitializingBean {
-	private static final Logger LOGGER = Logger.getLogger(BaseProducer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BaseProducer.class);
 
 	Properties props;
 
