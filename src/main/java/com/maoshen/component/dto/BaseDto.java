@@ -4,22 +4,22 @@ import java.io.Serializable;
 
 @SuppressWarnings("serial")
 public class BaseDto implements Serializable {
-	private int page;
-	private int count;
+	private Integer page;
+	private Integer count;
 
-	public int getPage() {
+	public Integer getPage() {
 		return page;
 	}
 
-	public void setPage(int page) {
+	public void setPage(Integer page) {
 		this.page = page;
 	}
 
-	public int getCount() {
+	public Integer getCount() {
 		return count;
 	}
 
-	public void setCount(int count) {
+	public void setCount(Integer count) {
 		this.count = count;
 	}
 
