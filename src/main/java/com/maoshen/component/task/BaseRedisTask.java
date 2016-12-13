@@ -6,8 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
 /**
@@ -55,10 +53,6 @@ public abstract class BaseRedisTask extends BaseTask {
 	@SuppressWarnings("rawtypes")
 	@Autowired
 	private RedisTemplate jedisTemplate;
-
-	@Autowired
-	@Qualifier("jedisFactory")
-	private JedisConnectionFactory jedisConnectionFactory;
 
 	@SuppressWarnings("unchecked") 
 	public void doJob() {

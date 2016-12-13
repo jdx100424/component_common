@@ -1,4 +1,4 @@
-package com.maoshen.component.dto;
+package com.maoshen.component.base.dto;
 
 import java.io.Serializable;
 
