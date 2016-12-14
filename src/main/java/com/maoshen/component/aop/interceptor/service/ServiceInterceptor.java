@@ -31,8 +31,8 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 	/**
 	 * 业务拦截器，在指定时间内，增加对相同的请求ID进行拦截，
 	 */
-	//@SuppressWarnings("unchecked")
 	//@Around("pointcut()")
+	@SuppressWarnings("unchecked")
 	public Object around(ProceedingJoinPoint pjp) throws Throwable {
 		RequestHeaderDto header = null;
 		Method method = ((MethodSignature) pjp.getSignature()).getMethod();
@@ -47,12 +47,12 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 
 		try {
 			if (header != null) {
-				if (jedisTemplate.opsForValue().setIfAbsent(getServiceName(), "true") == false) {
+				if (jedisTemplate.opsForValue().setIfAbsent(getServiceName()+ header.getRequestId(), "true") == false) {
 					throw new SameRequestIdException(getServiceName() + "_service method:" + method.getName()
 							+ " requestId:" + header.getRequestId() + " is same");
 				} else {
 					long time = (setLockTime() == 0 ? DEFAULT_LOCK_TIME : setLockTime());
-					jedisTemplate.expire(getServiceName(), time, TIME_UNIT);
+					jedisTemplate.expire(getServiceName()+header.getRequestId(), time, TIME_UNIT);
 				}
 			}
 
