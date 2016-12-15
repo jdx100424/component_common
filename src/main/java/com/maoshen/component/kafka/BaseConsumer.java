@@ -28,11 +28,14 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
+	// 失败后是否重发
+	private boolean failIsResend = false;
 
 	public BaseConsumer() {
 		super();
 		this.groupId = getGroupIdANdTopicName().getGroupId();
 		this.topicName = getGroupIdANdTopicName().getTopicName();
+		this.failIsResend = failIsResend();
 	}
 
 	@SuppressWarnings("resource")
@@ -69,8 +72,8 @@ public abstract class BaseConsumer implements InitializingBean {
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
 						LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
+						String receiveStr = record.value();
 						try {
-							String receiveStr = record.value();
 							Object receiveObject = JSONObject.parse(receiveStr);
 	
 							MessageDto dto = new MessageDto();
@@ -79,12 +82,22 @@ public abstract class BaseConsumer implements InitializingBean {
 							onMessage(dto);
 						} catch (Exception e) {
 							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName, e);
+							resend(receiveStr);
 						}
 					}
 				}
 			}
 		}.start();
 		LOGGER.info(this.getClass().getName() + " kafka is start,topicName is:" + topicName);
+	}
+	
+	/**
+	 * 重发
+	 */
+	private void resend(String str){
+		if(failIsResend){
+			
+		}
 	}
 
 	/**
@@ -98,4 +111,9 @@ public abstract class BaseConsumer implements InitializingBean {
 	 * 组ID,KAFKA名称
 	 */
 	public abstract MessageVo getGroupIdANdTopicName();
+	
+	/**
+	 * 假如抛出不可预料的异常，是否重新把请求塞回到KAFKA
+	 */
+	public abstract boolean failIsResend();
 }
