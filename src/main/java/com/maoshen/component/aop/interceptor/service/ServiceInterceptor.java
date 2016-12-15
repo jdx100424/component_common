@@ -49,7 +49,7 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 		}
 		
 		if(header == null){
-			header = RequestHeaderDtoHolder.get();
+			header = RequestHeaderDtoHolder.getIgnoreCreate();
 		}
 
 		try {

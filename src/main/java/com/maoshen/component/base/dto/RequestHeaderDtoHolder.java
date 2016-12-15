@@ -12,11 +12,16 @@ public class RequestHeaderDtoHolder {
 	}
 
 	public static RequestHeaderDto get() {
-		RequestHeaderDto header = holder.get();
+		RequestHeaderDto header = getIgnoreCreate();
 		if (header == null) {
 			header = new RequestHeaderDto();
 			holder.set(header);
 		}
+		return header;
+	}
+	
+	public static RequestHeaderDto getIgnoreCreate() {
+		RequestHeaderDto header = holder.get();
 		return header;
 	}
 }
