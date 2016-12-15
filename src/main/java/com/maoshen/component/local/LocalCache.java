@@ -16,7 +16,7 @@ public class LocalCache {
 	/**
 	 * 默认24小时过期
 	 */
-	private static Cache<Object, Object> cache = CacheBuilder.newBuilder().maximumSize(10000)
+	private static Cache<String, Object> cache = CacheBuilder.newBuilder().maximumSize(10000)
 			.expireAfterWrite(24, TimeUnit.HOURS).recordStats().build();
 
 	/**
