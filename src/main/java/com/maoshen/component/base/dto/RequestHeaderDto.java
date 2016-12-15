@@ -13,9 +13,23 @@ public final class RequestHeaderDto {
 	private HttpServletRequest request;
 
 	private HttpServletResponse response;
+	
+	private boolean requestIdIsAuto = true;
+
+	public boolean isRequestIdIsAuto() {
+		return requestIdIsAuto;
+	}
+
+	public void setRequestIdIsAuto(boolean requestIdIsAuto) {
+		this.requestIdIsAuto = requestIdIsAuto;
+	}
 
 	public String getRequestId() {
 		return requestId;
+	}
+
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
 	}
 
 	public Long getUserId() {

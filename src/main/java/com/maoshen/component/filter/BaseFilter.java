@@ -11,6 +11,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import com.maoshen.component.base.dto.RequestHeaderDto;
 import com.maoshen.component.base.dto.RequestHeaderDtoHolder;
 
 public class BaseFilter implements Filter {
+	private static final String REQUEST_ID="requestId";
 	FilterConfig filterConfig = null;
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseFilter.class);
 
@@ -34,6 +36,11 @@ public class BaseFilter implements Filter {
 		RequestHeaderDto dto = new RequestHeaderDto();
 		dto.setRequest((HttpServletRequest) request);
 		dto.setResponse((HttpServletResponse) response);
+		String paramRequestId = request.getParameter(REQUEST_ID);
+		if(StringUtils.isNotBlank(paramRequestId)){
+			dto.setRequestId(paramRequestId);
+			dto.setRequestIdIsAuto(false);
+		}
 		RequestHeaderDtoHolder.set(dto);
 		LOGGER.info("RequestHeaderDto value:{}",JSONObject.toJSONString(dto));
         chain.doFilter(request, response);

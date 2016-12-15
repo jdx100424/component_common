@@ -41,6 +41,7 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 
 		System.out.println(pjp.getTarget().getClass().getName());
 		try {
+			//service如果需要使用requestId拦截，第一个参数需要用RequestHeaderDto
 			header = (RequestHeaderDto) args[0];
 		} catch (Exception e) {
 			LOGGER.warn(getServiceName() + "_service method:{} has not RequestHeader",method.getName());
