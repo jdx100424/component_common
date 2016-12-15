@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.maoshen.component.aop.annotation.AnnotationInterceptor;
 import com.maoshen.component.aop.interceptor.BaseInterceptor;
 import com.maoshen.component.aop.interceptor.service.exception.SameRequestIdException;
 import com.maoshen.component.base.dto.RequestHeaderDto;
@@ -46,7 +47,8 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 		}
 
 		try {
-			if (header != null) {
+			AnnotationInterceptor annotationInterceptor = method.getAnnotation(AnnotationInterceptor.class);
+			if (header != null && annotationInterceptor != null) {
 				if (jedisTemplate.opsForValue().setIfAbsent(getServiceName()+ header.getRequestId(), "true") == false) {
 					throw new SameRequestIdException(getServiceName() + "_service method:" + method.getName()
 							+ " requestId:" + header.getRequestId() + " is same");
