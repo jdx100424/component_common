@@ -53,16 +53,16 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 		}
 
 		try {
-			AnnotationInterceptor annotationInterceptor = method.getAnnotation(AnnotationInterceptor.class);
-			if (header != null && annotationInterceptor != null) {
-				if (jedisTemplate.opsForValue().setIfAbsent(getServiceName()+ header.getRequestId(), "true") == false) {
-					throw new SameRequestIdException(getServiceName() + "_service method:" + method.getName()
-							+ " requestId:" + header.getRequestId() + " is same");
-				} else {
-					long time = (setLockTime() == 0 ? DEFAULT_LOCK_TIME : setLockTime());
-					jedisTemplate.expire(getServiceName()+header.getRequestId(), time, TIME_UNIT);
-				}
-			}
+//			AnnotationInterceptor annotationInterceptor = method.getAnnotation(AnnotationInterceptor.class);
+//			if (header != null && annotationInterceptor != null) {
+//				if (jedisTemplate.opsForValue().setIfAbsent(getServiceName()+ header.getRequestId(), "true") == false) {
+//					throw new SameRequestIdException(getServiceName() + "_service method:" + method.getName()
+//							+ " requestId:" + header.getRequestId() + " is same");
+//				} else {
+//					long time = (setLockTime() == 0 ? DEFAULT_LOCK_TIME : setLockTime());
+//					jedisTemplate.expire(getServiceName()+header.getRequestId(), time, TIME_UNIT);
+//				}
+//			}
 
 			Date startTime = null;
 			Date endTime = null;
