@@ -16,6 +16,7 @@ import com.maoshen.component.aop.annotation.AnnotationInterceptor;
 import com.maoshen.component.aop.interceptor.BaseInterceptor;
 import com.maoshen.component.aop.interceptor.service.exception.SameRequestIdException;
 import com.maoshen.component.base.dto.RequestHeaderDto;
+import com.maoshen.component.base.dto.RequestHeaderDtoHolder;
 
 public abstract class ServiceInterceptor extends BaseInterceptor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceInterceptor.class);
@@ -45,6 +46,10 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 			header = (RequestHeaderDto) args[0];
 		} catch (Exception e) {
 			LOGGER.warn(getServiceName() + "_service method:{} has not RequestHeader",method.getName());
+		}
+		
+		if(header == null){
+			header = RequestHeaderDtoHolder.get();
 		}
 
 		try {
