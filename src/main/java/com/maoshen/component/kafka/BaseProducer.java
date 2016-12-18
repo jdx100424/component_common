@@ -50,18 +50,14 @@ public class BaseProducer implements InitializingBean {
 	}
 
 	public void send(String topicName, Object obj) {
+		send(topicName,obj,UUID.randomUUID().toString());
+	}
+	public void send(String topicName, Object obj,String requestId) {
 		Producer<String, String> producer = null;
 		try {
-			// 创建kafka的生产者类
-			// 生产者的主要方法
-			// close();//Close this producer.
-			// close(long timeout, TimeUnit timeUnit); //This method waits up to
-			// timeout for the producer to complete the sending of all incomplete
-			// requests.
-			// flush() ;所有缓存记录被立刻发送
 			producer = new KafkaProducer<String, String>(props);
 			String info = JSONObject.toJSONString(obj);
-			producer.send(new ProducerRecord<String, String>(topicName, UUID.randomUUID().toString(), info));
+			producer.send(new ProducerRecord<String, String>(topicName, requestId, info));
 			producer.flush();
 		} catch (Exception e) {
 			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + topicName,e);
