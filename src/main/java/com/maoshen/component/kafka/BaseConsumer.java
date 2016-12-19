@@ -89,7 +89,7 @@ public abstract class BaseConsumer implements InitializingBean {
 				while(true){
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
-						LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
+						//LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
 						String receiveStr = record.value();
 
 						Object receiveObject = JSONObject.parse(receiveStr);
@@ -148,7 +148,7 @@ public abstract class BaseConsumer implements InitializingBean {
 		
 		jedisTemplateLong.setValueSerializer(new GenericToStringSerializer<Long>(Long.class));
 		Long times = (Long) jedisTemplateLong.opsForValue().get(requestIdKafkaFail);
-		if(times != null && Long.parseLong(times.toString()) >= KafkaConstant.KAFKA_RESEND_DEFAULT - 1){
+		if(times != null && Long.parseLong(times.toString()) >= KafkaConstant.KAFKA_RESEND_DEFAULT){
 			isOver = true;
 		}
 		jedisTemplateLong.opsForValue().increment(requestIdKafkaFail, 1L);
