@@ -20,6 +20,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.constant.KafkaConstant;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
+import com.maoshen.component.other.LsDigestUtils;
 import com.maoshen.component.other.ResourceUtils;
 
 /**
@@ -97,14 +98,14 @@ public abstract class BaseConsumer implements InitializingBean {
 						dto.setMessageInfo(receiveObject);
 						dto.setRequestId(record.key());
 						
-						//定义运行KEY和失败的KEY
-						String requestIdKafkaRun = dto.getRequestId() + "_" + topicName + "_kafka_run";
-						String requestIdKafkaFail = dto.getRequestId() + "_" + topicName + "_kafka_fail";
+						//定义运行KEY和失败的KEY,
+						String requestIdKafkaRun = LsDigestUtils.md5(JSONObject.toJSONString(dto)) + "_" + topicName + "_kafka_run";
+						String requestIdKafkaFail = LsDigestUtils.md5(JSONObject.toJSONString(dto)) + "_" + topicName + "_kafka_fail";
 					
 						try {					
 							//运行前先检测是否有重发标记限制
 							boolean isDoing = true;
-							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
+							if (isResend()){
 								if(jedisTemplate.opsForValue().setIfAbsent(requestIdKafkaRun, "true")) {
 									jedisTemplate.expire(getName(), REQUEST_EXPIRE_TIME, TimeUnit.SECONDS);	
 								}else{
@@ -120,7 +121,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						} catch (Exception e) {
 							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e);
 							//重发校验
-							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
+							if (isResend()){
 								try{
 									resend(requestIdKafkaFail, requestIdKafkaRun, receiveObject, dto.getRequestId());
 								}catch(Exception e1){
