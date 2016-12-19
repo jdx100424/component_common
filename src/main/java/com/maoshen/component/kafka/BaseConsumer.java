@@ -105,7 +105,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						try {					
 							//运行前先检测是否有重发标记限制
 							boolean isDoing = true;
-							if (isResend()){
+							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
 								if(jedisTemplate.opsForValue().setIfAbsent(requestIdKafkaRun, "true")) {
 									jedisTemplate.expire(getName(), REQUEST_EXPIRE_TIME, TimeUnit.SECONDS);	
 								}else{
@@ -121,7 +121,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						} catch (Exception e) {
 							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e);
 							//重发校验
-							if (isResend()){
+							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
 								try{
 									resend(requestIdKafkaFail, requestIdKafkaRun, receiveObject, dto.getRequestId());
 								}catch(Exception e1){
