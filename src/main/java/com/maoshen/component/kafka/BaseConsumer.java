@@ -20,6 +20,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.constant.KafkaConstant;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
+import com.maoshen.component.other.LsDigestUtils;
 import com.maoshen.component.other.ResourceUtils;
 
 /**
@@ -97,10 +98,12 @@ public abstract class BaseConsumer implements InitializingBean {
 						dto.setMessageInfo(receiveObject);
 						dto.setRequestId(record.key());
 						
+						String md5Id = LsDigestUtils.md5(dto);
+						
 						//定义运行KEY和失败的KEY
-						String requestIdKafkaRun = dto.getRequestId() + "_" + topicName + "_kafka_run";
-						String requestIdKafkaFail = dto.getRequestId() + "_" + topicName + "_kafka_fail";
-					
+						String requestIdKafkaRun = md5Id + "_" + topicName + "_kafka_run";
+						String requestIdKafkaFail = md5Id + "_" + topicName + "_kafka_fail";
+						LOGGER.error("MesageDto:{},requestIdKafkaRun:{},requestIdKafkaFail:{}",JSONObject.toJSONString(dto),requestIdKafkaRun,requestIdKafkaFail );
 						try {					
 							//运行前先检测是否有重发标记限制
 							boolean isDoing = true;
