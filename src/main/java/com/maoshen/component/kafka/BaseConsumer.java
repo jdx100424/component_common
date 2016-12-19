@@ -104,6 +104,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						String requestIdKafkaRun = md5Id + "_" + topicName + "_kafka_run";
 						String requestIdKafkaFail = md5Id + "_" + topicName + "_kafka_fail";
 						LOGGER.error("MesageDto:{},requestIdKafkaRun:{},requestIdKafkaFail:{}",JSONObject.toJSONString(dto),requestIdKafkaRun,requestIdKafkaFail );
+
 						try {					
 							//运行前先检测是否有重发标记限制
 							boolean isDoing = true;
