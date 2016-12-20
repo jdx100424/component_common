@@ -98,7 +98,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						dto.setMessageInfo(receiveObject);
 						dto.setRequestId(record.key());
 						
-						String md5Id = LsDigestUtils.md5(dto);
+						String md5Id = LsDigestUtils.md5(JSONObject.toJSONString(dto));
 						
 						//定义运行KEY和失败的KEY
 						String requestIdKafkaRun = md5Id + "_" + topicName + "_kafka_run";
