@@ -3,6 +3,7 @@ package com.maoshen.component.kafka;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.fastjson.JSONObject;
+import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.other.ResourceUtils;
 
@@ -49,15 +51,22 @@ public class BaseProducer implements InitializingBean {
 		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 	}
 
-	public void send(String topicName, Object obj) {
-		send(topicName,obj,UUID.randomUUID().toString());
-	}
-	public void send(String topicName, Object obj,String requestId) {
+	public void send(String topicName, MessageDto dto) {
 		Producer<String, String> producer = null;
+		if(dto==null){
+			return;
+		}
+		
 		try {
+			if(StringUtils.isBlank(dto.getMessageId())){
+				dto.setMessageId(UUID.randomUUID().toString());
+			}
+			if(StringUtils.isBlank(dto.getRequestId())){
+				dto.setRequestId(UUID.randomUUID().toString());
+			}
 			producer = new KafkaProducer<String, String>(props);
-			String info = JSONObject.toJSONString(obj);
-			producer.send(new ProducerRecord<String, String>(topicName, requestId, info));
+			String info = JSONObject.toJSONString(dto);
+			producer.send(new ProducerRecord<String, String>(topicName, dto.getRequestId(), info));
 			producer.flush();
 		} catch (Exception e) {
 			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + topicName,e);
@@ -68,9 +77,9 @@ public class BaseProducer implements InitializingBean {
 		}
 	}
 	
-	public void send(MessageVo messageVo, Object obj) {
+	public void send(MessageVo messageVo, MessageDto dto) {
 		if(messageVo != null){
-			send(messageVo.getTopicName(),obj);
+			send(messageVo.getTopicName(),dto);
 		}
 	}
 }
