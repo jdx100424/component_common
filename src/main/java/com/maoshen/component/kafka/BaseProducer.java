@@ -58,9 +58,6 @@ public class BaseProducer implements InitializingBean {
 		}
 		
 		try {
-			if(StringUtils.isBlank(dto.getMessageId())){
-				dto.setMessageId(UUID.randomUUID().toString());
-			}
 			if(StringUtils.isBlank(dto.getRequestId())){
 				dto.setRequestId(UUID.randomUUID().toString());
 			}

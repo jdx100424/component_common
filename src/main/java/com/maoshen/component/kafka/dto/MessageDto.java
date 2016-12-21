@@ -7,6 +7,12 @@ public class MessageDto implements Serializable{
 	private Object messageInfo;
 
 	private String requestId;
+	
+	public MessageDto(Object messageInfo, String requestId) {
+		super();
+		this.messageInfo = messageInfo;
+		this.requestId = requestId;
+	}
 
 	public Object getMessageInfo() {
 		return messageInfo;

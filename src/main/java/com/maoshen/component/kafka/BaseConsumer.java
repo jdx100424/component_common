@@ -93,11 +93,7 @@ public abstract class BaseConsumer implements InitializingBean {
 						//LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
 						String receiveStr = record.value();
 
-						Object receiveObject = JSONObject.parse(receiveStr);
-						MessageDto dto = new MessageDto();
-						dto.setMessageInfo(receiveObject);
-						dto.setRequestId(record.key());
-						
+						MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);						
 						String md5Id = LsDigestUtils.md5(JSONObject.toJSONString(dto));
 						
 						//定义运行KEY和失败的KEY
@@ -126,7 +122,7 @@ public abstract class BaseConsumer implements InitializingBean {
 							//重发校验
 							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
 								try{
-									resend(requestIdKafkaFail, requestIdKafkaRun, receiveObject, dto.getRequestId());
+									resend(requestIdKafkaFail, requestIdKafkaRun, dto);
 								}catch(Exception e1){
 									LOGGER.error(this.getClass().getName() + " onMessageKafka resend error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e1);
 								}
@@ -147,7 +143,7 @@ public abstract class BaseConsumer implements InitializingBean {
 	 * @param receiveObject
 	 */
 	@SuppressWarnings("unchecked")
-	private void resend(String requestIdKafkaFail,String requestIdKafkaRun,Object receiveObject,String requestId){
+	private void resend(String requestIdKafkaFail,String requestIdKafkaRun,MessageDto dto){
 		boolean isOver = false;		
 		
 		jedisTemplateLong.setValueSerializer(new GenericToStringSerializer<Long>(Long.class));
@@ -162,7 +158,7 @@ public abstract class BaseConsumer implements InitializingBean {
 		if(isOver==false){
 			//重发前需要删除运行REDIS状态
 			jedisTemplate.delete(requestIdKafkaRun);
-			baseProducer.send(topicName, receiveObject,requestId);
+			baseProducer.send(topicName, dto);
 		}else{
 			LOGGER.warn(requestIdKafkaRun + " resend is over " + KafkaConstant.KAFKA_RESEND_DEFAULT);
 		}
