@@ -85,7 +85,6 @@ public abstract class BaseConsumer implements InitializingBean {
 
 		// 使用线程监控KAFKA接收信息
 		new Thread() {
-			@SuppressWarnings("unchecked")
 			public void run() {
 				while(true){
 					ConsumerRecords<String, String> records = consumer.poll(100);
@@ -94,74 +93,16 @@ public abstract class BaseConsumer implements InitializingBean {
 						String receiveStr = record.value();
 
 						MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);						
-						String md5Id = LsDigestUtils.md5(JSONObject.toJSONString(dto));
-						
-						//定义运行KEY和失败的KEY
-						String requestIdKafkaRun = md5Id + "_" + topicName + "_kafka_run";
-						String requestIdKafkaFail = md5Id + "_" + topicName + "_kafka_fail";
-						LOGGER.error("MesageDto:{},requestIdKafkaRun:{},requestIdKafkaFail:{}",JSONObject.toJSONString(dto),requestIdKafkaRun,requestIdKafkaFail );
-
 						try {					
-							//运行前先检测是否有重发标记限制
-							boolean isDoing = true;
-							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
-								if(jedisTemplate.opsForValue().setIfAbsent(requestIdKafkaRun, "true")) {
-									jedisTemplate.expire(getName(), REQUEST_EXPIRE_TIME, TimeUnit.SECONDS);	
-								}else{
-									isDoing = false;
-								}
-							}
-							
-							if(isDoing){
-								onMessage(dto);
-							}else{
-								LOGGER.warn(requestIdKafkaRun + " has been run,do not doing again");
-							}
+							onMessage(dto);
 						} catch (Exception e) {
 							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e);
-							//重发校验
-							if (StringUtils.isNotBlank(dto.getRequestId()) && isResend()){
-								try{
-									resend(requestIdKafkaFail, requestIdKafkaRun, dto);
-								}catch(Exception e1){
-									LOGGER.error(this.getClass().getName() + " onMessageKafka resend error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e1);
-								}
-							}
 						}
 					}
 				}
 			}
 		}.start();
 		LOGGER.info(this.getClass().getName() + " kafka is start,topicName is:" + topicName);
-	}
-
-	/**
-	 * 重发
-	 * @param requestIdKafkaFail
-	 * @param requestIdKafkaRun
-	 * @param allowKafkaResendAnnotation
-	 * @param receiveObject
-	 */
-	@SuppressWarnings("unchecked")
-	private void resend(String requestIdKafkaFail,String requestIdKafkaRun,MessageDto dto){
-		boolean isOver = false;		
-		
-		jedisTemplateLong.setValueSerializer(new GenericToStringSerializer<Long>(Long.class));
-		Long times = (Long) jedisTemplateLong.opsForValue().get(requestIdKafkaFail);
-		if(times != null && Long.parseLong(times.toString()) >= KafkaConstant.KAFKA_RESEND_DEFAULT){
-			isOver = true;
-		}
-		jedisTemplateLong.opsForValue().increment(requestIdKafkaFail, 1L);
-		jedisTemplateLong.expire(requestIdKafkaFail, REQUEST_EXPIRE_TIME, TimeUnit.SECONDS);
-		
-		//重发
-		if(isOver==false){
-			//重发前需要删除运行REDIS状态
-			jedisTemplate.delete(requestIdKafkaRun);
-			baseProducer.send(topicName, dto);
-		}else{
-			LOGGER.warn(requestIdKafkaRun + " resend is over " + KafkaConstant.KAFKA_RESEND_DEFAULT);
-		}
 	}
 	
 	/**
