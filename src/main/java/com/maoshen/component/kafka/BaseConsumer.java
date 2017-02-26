@@ -2,7 +2,6 @@ package com.maoshen.component.kafka;
 
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -14,13 +13,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
 
 import com.alibaba.fastjson.JSONObject;
-import com.maoshen.component.kafka.constant.KafkaConstant;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
-import com.maoshen.component.other.LsDigestUtils;
 import com.maoshen.component.other.ResourceUtils;
 
 /**
@@ -35,9 +31,6 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
-
-	// KAFKA REQUSETID默认保存时间（在这个时间段里相同请求不会接收）
-	private static final long REQUEST_EXPIRE_TIME = 60 * 60 * 24 * 7;
 	
 	@SuppressWarnings("rawtypes")
 	@Autowired
@@ -116,10 +109,4 @@ public abstract class BaseConsumer implements InitializingBean {
 	 * 组ID,KAFKA名称
 	 */
 	public abstract MessageVo getGroupIdANdTopicName();
-	
-	/**
-	 * 是否可以重发
-	 * @return
-	 */
-	public abstract boolean isResend();
 }
