@@ -2,6 +2,8 @@ package com.maoshen.component.aop.interceptor.service;
 
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,7 +11,11 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.dubbo.rpc.RpcContext;
+import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.aop.interceptor.BaseInterceptor;
+import com.maoshen.component.rest.UserRestContext;
+import com.maoshen.component.rpc.filter.constant.DubboContextFilterConstant;
 
 public abstract class ServiceInterceptor extends BaseInterceptor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceInterceptor.class);
@@ -23,6 +29,10 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 		Method method = ((MethodSignature) pjp.getSignature()).getMethod();
 
 		try {
+			Map<String,String> map = new HashMap<String,String>();
+			map.put(DubboContextFilterConstant.RPC_USER_REST_CONTEXT, JSONObject.toJSONString(UserRestContext.get()));
+			RpcContext.getContext().setAttachments(map);
+			
 			Date startTime = null;
 			Date endTime = null;
 			if (isShowRunningTime()) {

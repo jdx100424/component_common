@@ -52,6 +52,7 @@
 		<org.apache.poi.version>3.14</org.apache.poi.version>
 		<com.baidu.disconf.version>2.6.31</com.baidu.disconf.version>
 		<guava.version>19.0</guava.version>
+		<dubbo-alibaba>2.5.3</dubbo-alibaba>
 	</properties>
 
 
@@ -63,6 +64,21 @@
     		<artifactId>spring-integration-kafka</artifactId>
     		<version>${kafka.spring.version}</version>
 		</dependency>-->
+		<dependency>  
+        	<groupId>com.alibaba</groupId>  
+        	<artifactId>dubbo</artifactId>  
+        	<version>${dubbo-alibaba}</version>  
+        	<exclusions>
+            	<exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>netty</artifactId>
+                    <groupId>org.jboss.netty</groupId>
+                </exclusion>
+            </exclusions>
+     	</dependency> 
 		<dependency>
           	<groupId>com.google.guava</groupId>
           	<artifactId>guava</artifactId>
