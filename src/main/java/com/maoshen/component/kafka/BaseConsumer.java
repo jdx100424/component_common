@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.other.ResourceUtils;
+import com.maoshen.component.rest.UserRestContext;
 
 /**
  * KAFKA接收端的代码
@@ -31,13 +31,6 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
-	
-	@SuppressWarnings("rawtypes")
-	@Autowired
-	private RedisTemplate jedisTemplate;
-	@SuppressWarnings("rawtypes")
-	@Autowired
-	private RedisTemplate jedisTemplateLong;
 	
 	@Autowired
 	@Qualifier("baseProducer")
@@ -83,13 +76,17 @@ public abstract class BaseConsumer implements InitializingBean {
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
 						//LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
-						String receiveStr = record.value();
-
-						MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);						
-						try {					
+						try {		
+							String receiveStr = record.value();
+							MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);
+							UserRestContext userRestContext = UserRestContext.get();
+							userRestContext.setAccessToken(dto.getUserRestContext().getAccessToken());
+							userRestContext.setRequestId(dto.getUserRestContext().getRequestId());
 							onMessage(dto);
 						} catch (Exception e) {
-							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName + ",requestId:" + dto.getRequestId(), e);
+							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName,e);
+						} finally{
+							UserRestContext.clear();
 						}
 					}
 				}

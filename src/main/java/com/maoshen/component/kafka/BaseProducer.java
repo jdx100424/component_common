@@ -1,9 +1,7 @@
 package com.maoshen.component.kafka;
 
 import java.util.Properties;
-import java.util.UUID;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -15,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.other.ResourceUtils;
+import com.maoshen.component.rest.UserRestContext;
 
 /**
  * KAFKA发送方
@@ -58,12 +57,11 @@ public class BaseProducer implements InitializingBean {
 		}
 		
 		try {
-			if(StringUtils.isBlank(dto.getRequestId())){
-				dto.setRequestId(UUID.randomUUID().toString());
-			}
+			UserRestContext userRestContext = UserRestContext.get();
+			dto.setUserRestContext(userRestContext);
 			producer = new KafkaProducer<String, String>(props);
 			String info = JSONObject.toJSONString(dto);
-			producer.send(new ProducerRecord<String, String>(topicName, dto.getRequestId(), info));
+			producer.send(new ProducerRecord<String, String>(topicName, userRestContext.getRequestId(), info));
 			producer.flush();
 		} catch (Exception e) {
 			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + topicName,e);

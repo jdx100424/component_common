@@ -2,16 +2,21 @@ package com.maoshen.component.kafka.dto;
 
 import java.io.Serializable;
 
+import com.maoshen.component.rest.UserRestContext;
+
 @SuppressWarnings("serial")
 public class MessageDto implements Serializable{
 	private Object messageInfo;
 
-	private String requestId;
+	private UserRestContext userRestContext;
 	
-	public MessageDto(Object messageInfo, String requestId) {
+	public MessageDto(){
+		
+	}
+	
+	public MessageDto(Object messageInfo) {
 		super();
 		this.messageInfo = messageInfo;
-		this.requestId = requestId;
 	}
 
 	public Object getMessageInfo() {
@@ -22,12 +27,11 @@ public class MessageDto implements Serializable{
 		this.messageInfo = messageInfo;
 	}
 
-	public String getRequestId() {
-		return requestId;
+	public UserRestContext getUserRestContext() {
+		return userRestContext;
 	}
 
-	public void setRequestId(String requestId) {
-		this.requestId = requestId;
+	public void setUserRestContext(UserRestContext userRestContext) {
+		this.userRestContext = userRestContext;
 	}
-
 }
