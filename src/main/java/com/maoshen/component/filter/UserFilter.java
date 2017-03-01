@@ -1,6 +1,8 @@
 package com.maoshen.component.filter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.Filter;
@@ -14,7 +16,10 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.dubbo.rpc.RpcContext;
+import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.rest.UserRestContext;
+import com.maoshen.component.rpc.filter.constant.DubboContextFilterConstant;
 
 public class UserFilter implements Filter {
 	FilterConfig filterConfig = null;
@@ -33,7 +38,12 @@ public class UserFilter implements Filter {
 			userRestContext.setAccessToken(request.getParameter("accessToken"));
 			userRestContext.setRequestId(StringUtils.isBlank(request.getParameter("requestId"))?UUID.randomUUID().toString():request.getParameter("requestId"));
 			//LOGGER.info("userRestContext value:{}",JSONObject.toJSONString(userRestContext));
-	        chain.doFilter(request, response);
+	        
+			Map<String,String> map = new HashMap<String,String>();
+			map.put(DubboContextFilterConstant.RPC_USER_REST_CONTEXT, JSONObject.toJSONString(userRestContext));
+			RpcContext.getContext().setAttachments(map);
+			
+			chain.doFilter(request, response);
 		}catch(Exception e){
 			LOGGER.error(e.getMessage(),e);
 		}finally{
