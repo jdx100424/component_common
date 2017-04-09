@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.core.ValueOperations;
 
 /**
  * redis 
@@ -43,7 +43,8 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
  */
 @SuppressWarnings("rawtypes")
 public class RedisService {
-
+	private static final long TIMEOUT = 10000L;
+	private static final TimeUnit TIME_UNIT = TimeUnit.MILLISECONDS;
 	@Autowired
 	private RedisTemplate jedisTemplate;
 
@@ -61,8 +62,9 @@ public class RedisService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void insertByHash(Object key, Object hashKey, Object value) throws Exception {
+	public void insertByHash(Object key, Object hashKey, Object value,long timeOut, TimeUnit timeUnit) throws Exception {
 		jedisTemplate.opsForHash().put(key, hashKey, value);
+		jedisTemplate.expire(key, timeOut, timeUnit);
 	}
 
 	public Object getByValue(Object key) throws Exception {
@@ -80,8 +82,57 @@ public class RedisService {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void incr(Object key){
-		//jedisTemplate.setValueSerializer(new GenericToStringSerializer<Long>(Long.class));
+	public void incr(Object key, long timeOut, TimeUnit timeUnit){
 		jedisTemplate.opsForValue().increment(key, 1);
+		jedisTemplate.expire(key, timeOut, timeUnit);
+	}
+	
+	/**
+	 * redis lock
+	 * @param key
+	 */
+	public void lock(Object key){
+		boolean isLock = lockLogic(key);
+		long last = System.currentTimeMillis();
+		while(!isLock){
+			try {
+				TimeUnit.MILLISECONDS.sleep(100);
+			} catch (InterruptedException e) {
+				
+			}
+			
+			if(System.currentTimeMillis()-last>TIMEOUT){
+				//锁超时
+				throw new RuntimeException("multi retry lock timeout!");
+			}
+			//重新获取锁
+			isLock=lockLogic(key);
+		}
+	}
+	
+	public void unlock(Object key){
+		remove(key);
+	}
+	
+	/**
+	 * 获取锁lock
+	 *@author vakinge
+	 * @param lockId
+	 * @param timeout 毫秒
+	 * @return 获得lock ＝＝ true  
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean lockLogic(Object key){
+		Boolean result = false;
+		try {		
+			ValueOperations valueOperations = jedisTemplate.opsForValue();
+			result = valueOperations.setIfAbsent(key, "true");
+			if(result){
+				jedisTemplate.expire(key, TIMEOUT+2000, TIME_UNIT);
+			}
+		} finally {
+			
+		}
+		return result;
 	}
 }
