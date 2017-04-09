@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
 
 /**
  * redis 
@@ -80,6 +81,7 @@ public class RedisService {
 	
 	@SuppressWarnings("unchecked")
 	public void incr(Object key){
+		//jedisTemplate.setValueSerializer(new GenericToStringSerializer<Long>(Long.class));
 		jedisTemplate.opsForValue().increment(key, 1);
 	}
 }

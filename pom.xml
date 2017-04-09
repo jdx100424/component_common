@@ -53,11 +53,17 @@
 		<com.baidu.disconf.version>2.6.31</com.baidu.disconf.version>
 		<guava.version>19.0</guava.version>
 		<dubbo-alibaba>2.5.3</dubbo-alibaba>
+		<junit.version>4.12</junit.version>
 	</properties>
 
 
 
 	<dependencies>
+		<dependency>
+		    <groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		    <version>${junit.version}</version>
+		</dependency>
 		<!-- 
 		<dependency>
     		<groupId>org.springframework.integration</groupId>
@@ -88,7 +94,12 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
 			<version>${spring.version}</version>
-		</dependency>		
+		</dependency>	
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+		</dependency>			
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
