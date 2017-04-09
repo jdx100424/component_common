@@ -77,4 +77,9 @@ public class RedisService {
 	public void remove(Object key){
 		jedisTemplate.delete(key);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public void incr(Object key){
+		jedisTemplate.opsForValue().increment(key, 1);
+	}
 }
