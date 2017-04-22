@@ -7,6 +7,8 @@
  */
 package com.maoshen.component.redis;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,33 +60,59 @@ public class RedisService {
 
 	@SuppressWarnings("unchecked")
 	public void insertByValue(Object key, Object value, long timeOut, TimeUnit timeUnit) throws Exception {
-		jedisTemplate.opsForValue().set(key, value, timeOut, timeUnit);
+		String keyStr = key.toString();
+		jedisTemplate.opsForValue().set(keyStr, value, timeOut, timeUnit);
 	}
 
 	@SuppressWarnings("unchecked")
 	public void insertByHash(Object key, Object hashKey, Object value,long timeOut, TimeUnit timeUnit) throws Exception {
-		jedisTemplate.opsForHash().put(key, hashKey, value);
-		jedisTemplate.expire(key, timeOut, timeUnit);
+		String keyStr = key.toString();
+		String hashKeyStr = hashKey.toString();
+		jedisTemplate.opsForHash().put(keyStr, hashKeyStr, value);
+		jedisTemplate.expire(keyStr, timeOut, timeUnit);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void insertAllList(Object key,List list,long timeOut, TimeUnit timeUnit) throws Exception {
+		String keyStr = key.toString();
+		jedisTemplate.opsForList().leftPushAll(keyStr, list);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Object rightPopList(Object key) throws Exception {
+		String keyStr = key.toString();
+		return jedisTemplate.opsForList().rightPop(keyStr);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void insertAllHash(Object key, Map map,long timeOut, TimeUnit timeUnit) throws Exception {
+		String keyStr = key.toString();
+		jedisTemplate.opsForHash().putAll(keyStr, map);
+		jedisTemplate.expire(keyStr, timeOut, timeUnit);
 	}
 
 	public Object getByValue(Object key) throws Exception {
-		return jedisTemplate.opsForValue().get(key);
+		String keyStr = key.toString();
+		return jedisTemplate.opsForValue().get(keyStr);
 	}
 
 	@SuppressWarnings("unchecked")
 	public Object getByHash(Object key, Object hashKey) throws Exception {
-		return jedisTemplate.opsForHash().get(key, hashKey);
+		String keyStr = key.toString();
+		return jedisTemplate.opsForHash().get(keyStr, hashKey);
 	}
 	
 	@SuppressWarnings("unchecked")
 	public void remove(Object key){
-		jedisTemplate.delete(key);
+		String keyStr = key.toString();
+		jedisTemplate.delete(keyStr);
 	}
 	
 	@SuppressWarnings("unchecked")
 	public void incr(Object key, long timeOut, TimeUnit timeUnit){
-		jedisTemplate.opsForValue().increment(key, 1);
-		jedisTemplate.expire(key, timeOut, timeUnit);
+		String keyStr = key.toString();
+		jedisTemplate.opsForValue().increment(keyStr, 1);
+		jedisTemplate.expire(keyStr, timeOut, timeUnit);
 	}
 	
 	/**
@@ -92,7 +120,8 @@ public class RedisService {
 	 * @param key
 	 */
 	public void lock(Object key){
-		boolean isLock = lockLogic(key);
+		String keyStr = key.toString();
+		boolean isLock = lockLogic(keyStr);
 		long last = System.currentTimeMillis();
 		while(!isLock){
 			try {
@@ -106,12 +135,13 @@ public class RedisService {
 				throw new RuntimeException("multi retry lock timeout!");
 			}
 			//重新获取锁
-			isLock=lockLogic(key);
+			isLock=lockLogic(keyStr);
 		}
 	}
 	
 	public void unlock(Object key){
-		remove(key);
+		String keyStr = key.toString();
+		remove(keyStr);
 	}
 	
 	/**
@@ -123,12 +153,13 @@ public class RedisService {
 	 */
 	@SuppressWarnings("unchecked")
 	private boolean lockLogic(Object key){
+		String keyStr = key.toString();
 		Boolean result = false;
 		try {		
 			ValueOperations valueOperations = jedisTemplate.opsForValue();
-			result = valueOperations.setIfAbsent(key, "true");
+			result = valueOperations.setIfAbsent(keyStr, "true");
 			if(result){
-				jedisTemplate.expire(key, TIMEOUT+2000, TIME_UNIT);
+				jedisTemplate.expire(keyStr, TIMEOUT+2000, TIME_UNIT);
 			}
 		} finally {
 			
