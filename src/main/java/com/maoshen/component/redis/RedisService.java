@@ -99,7 +99,8 @@ public class RedisService {
 	@SuppressWarnings("unchecked")
 	public Object getByHash(Object key, Object hashKey) throws Exception {
 		String keyStr = key.toString();
-		return jedisTemplate.opsForHash().get(keyStr, hashKey);
+		String hashKeyStr = hashKey.toString();
+		return jedisTemplate.opsForHash().get(keyStr, hashKeyStr);
 	}
 	
 	@SuppressWarnings("unchecked")
