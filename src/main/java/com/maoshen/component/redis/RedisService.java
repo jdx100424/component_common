@@ -47,6 +47,7 @@ import org.springframework.data.redis.core.ValueOperations;
 public class RedisService {
 	private static final long TIMEOUT = 10000L;
 	private static final TimeUnit TIME_UNIT = TimeUnit.MILLISECONDS;
+	private static final long DEFAULT_EXPIRE_TIME = 1000 * 60 * 60 *24 *3;
 	@Autowired
 	private RedisTemplate jedisTemplate;
 
@@ -58,12 +59,19 @@ public class RedisService {
 		this.jedisTemplate = jedisTemplate;
 	}
 
+	public void insertByValue(Object key, Object value) throws Exception {
+		String keyStr = key.toString();
+		insertByValue(keyStr, value, DEFAULT_EXPIRE_TIME, TIME_UNIT);
+	}
 	@SuppressWarnings("unchecked")
 	public void insertByValue(Object key, Object value, long timeOut, TimeUnit timeUnit) throws Exception {
 		String keyStr = key.toString();
 		jedisTemplate.opsForValue().set(keyStr, value, timeOut, timeUnit);
 	}
 
+	public void insertByHash(Object key, Object hashKey, Object value) throws Exception {
+		insertByHash(key, hashKey, value,DEFAULT_EXPIRE_TIME, TIME_UNIT);
+	}
 	@SuppressWarnings("unchecked")
 	public void insertByHash(Object key, Object hashKey, Object value,long timeOut, TimeUnit timeUnit) throws Exception {
 		String keyStr = key.toString();
@@ -72,6 +80,9 @@ public class RedisService {
 		jedisTemplate.expire(keyStr, timeOut, timeUnit);
 	}
 	
+	public void insertAllList(Object key,List list) throws Exception {
+		insertAllList(key, list,DEFAULT_EXPIRE_TIME, TIME_UNIT);
+	}
 	@SuppressWarnings("unchecked")
 	public void insertAllList(Object key,List list,long timeOut, TimeUnit timeUnit) throws Exception {
 		String keyStr = key.toString();
@@ -79,11 +90,27 @@ public class RedisService {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Object rightPopList(Object key) throws Exception {
+	public <T> T leftPushList(Object key,Object value) throws Exception {
 		String keyStr = key.toString();
-		return jedisTemplate.opsForList().rightPop(keyStr);
+		try{
+			return (T)jedisTemplate.opsForList().leftPush(keyStr,value);
+		}catch(Exception e){
+			return null;
+		}
+	}
+	@SuppressWarnings("unchecked")
+	public <T> T rightPopList(Object key) throws Exception {
+		String keyStr = key.toString();
+		try{
+			return (T)jedisTemplate.opsForList().rightPop(keyStr);
+		}catch(Exception e){
+			return null;
+		}
 	}
 	
+	public void insertAllHash(Object key, Map map) throws Exception {
+		insertAllHash(key, map,DEFAULT_EXPIRE_TIME, TIME_UNIT);
+	}
 	@SuppressWarnings("unchecked")
 	public void insertAllHash(Object key, Map map,long timeOut, TimeUnit timeUnit) throws Exception {
 		String keyStr = key.toString();
@@ -91,16 +118,27 @@ public class RedisService {
 		jedisTemplate.expire(keyStr, timeOut, timeUnit);
 	}
 
-	public Object getByValue(Object key) throws Exception {
+	@SuppressWarnings("unchecked")
+	public <T> T getByValue(Object key) throws Exception {
 		String keyStr = key.toString();
-		return jedisTemplate.opsForValue().get(keyStr);
+		try{
+			return (T)jedisTemplate.opsForValue().get(keyStr);
+		}catch(Exception e){
+			remove(keyStr);
+			return null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public Object getByHash(Object key, Object hashKey) throws Exception {
+	public <T> T getByHash(Object key, Object hashKey) throws Exception {
 		String keyStr = key.toString();
 		String hashKeyStr = hashKey.toString();
-		return jedisTemplate.opsForHash().get(keyStr, hashKeyStr);
+		try{
+			return (T)jedisTemplate.opsForHash().get(keyStr, hashKeyStr);
+		}catch(Exception e){
+			remove(keyStr);
+			return null;
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -109,6 +147,9 @@ public class RedisService {
 		jedisTemplate.delete(keyStr);
 	}
 	
+	public void incr(Object key){
+		incr(key,DEFAULT_EXPIRE_TIME, TIME_UNIT);
+	}
 	@SuppressWarnings("unchecked")
 	public void incr(Object key, long timeOut, TimeUnit timeUnit){
 		String keyStr = key.toString();
