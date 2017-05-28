@@ -13,6 +13,16 @@ public class KafkaDisconf implements IDisconfUpdate {
 	private String kafkaIp;
 	private String kafkaPort;
 	private String kafkaServer;
+	private String kafkaGray;
+	
+	@DisconfFileItem(name = "kafka.gray", associateField = "kafkaGray")
+	public String getKafkaGray() {
+		return kafkaGray;
+	}
+
+	public void setKafkaGray(String kafkaGray) {
+		this.kafkaGray = kafkaGray;
+	}
 
 	@DisconfFileItem(name = "kafka.server", associateField = "kafkaServer")
 	public String getKafkaServer() {

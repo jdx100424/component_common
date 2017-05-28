@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
+import com.maoshen.component.kafka.util.KafkaUtil;
 import com.maoshen.component.other.ResourceUtils;
 import com.maoshen.component.rest.UserRestContext;
 
@@ -31,6 +32,8 @@ public abstract class BaseConsumer implements InitializingBean {
 	private String groupId;
 	// KAKFA消息接收名称
 	private String topicName;
+	
+	private boolean isGray;	
 	
 	@Autowired
 	@Qualifier("baseProducer")
@@ -51,6 +54,8 @@ public abstract class BaseConsumer implements InitializingBean {
 		String kafkaIp = ResourceUtils.get("kafka.ip", "localhost");
 		String kafkaPort = ResourceUtils.get("kafka.port", "9092");
 		String kafkaServer = ResourceUtils.get("kafka.server","127.0.0.1:9092,127.0.0.1:9093");
+		String kafkaGray = ResourceUtils.get("kafka.gray","false");
+		isGray = KafkaUtil.iskafkaGray(kafkaGray);
 		props.put("bootstrap.servers", kafkaServer);
 		//props.put("bootstrap.servers", kafkaIp+":"+kafkaPort);
 		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort + ",kafkaServer:"+kafkaServer);
@@ -69,7 +74,13 @@ public abstract class BaseConsumer implements InitializingBean {
 
 		KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
 		// 订阅主题列表topic
-		consumer.subscribe(Arrays.asList(topicName));
+		
+		//灰度环境判断
+		if(isGray){
+			consumer.subscribe(Arrays.asList(KafkaUtil.GRAY_KAFKA + topicName));
+		}else{
+			consumer.subscribe(Arrays.asList(topicName));
+		}
 
 		// 使用线程监控KAFKA接收信息
 		new Thread() {

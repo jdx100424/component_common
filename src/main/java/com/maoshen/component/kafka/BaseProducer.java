@@ -2,6 +2,7 @@ package com.maoshen.component.kafka;
 
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.InitializingBean;
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
+import com.maoshen.component.kafka.util.KafkaUtil;
 import com.maoshen.component.other.ResourceUtils;
 import com.maoshen.component.rest.UserRestContext;
 
@@ -26,6 +28,8 @@ import com.maoshen.component.rest.UserRestContext;
 public class BaseProducer implements InitializingBean {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseProducer.class);
 
+	private boolean isGray;	
+	
 	Properties props;
 
 	public void afterPropertiesSet() throws Exception {
@@ -33,6 +37,9 @@ public class BaseProducer implements InitializingBean {
 		String kafkaIp = ResourceUtils.get("kafka.ip", "localhost");
 		String kafkaPort = ResourceUtils.get("kafka.port", "9092");
 		String kafkaServer = ResourceUtils.get("kafka.server","127.0.0.1:9092,127.0.0.1:9093");
+		String kafkaGray = ResourceUtils.get("kafka.gray","false");
+		isGray = KafkaUtil.iskafkaGray(kafkaGray);
+			
 		//props.put("bootstrap.servers", kafkaIp+":"+kafkaPort);
 		props.put("bootstrap.servers", kafkaServer);
 		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort + ",kafkaServer:"+kafkaServer);
@@ -63,21 +70,26 @@ public class BaseProducer implements InitializingBean {
 		if (dto == null) {
 			return;
 		}
-
+		//灰度环境判断
+		if(isGray){
+			topicName = KafkaUtil.GRAY_KAFKA + topicName; 
+		}
+		final String kafkaTopicName = topicName;
+		
 		try {
 			UserRestContext userRestContext = UserRestContext.get();
 			dto.setUserRestContext(userRestContext);
 			producer = new KafkaProducer<String, String>(props);
 			String info = JSONObject.toJSONString(dto);
-			producer.send(new ProducerRecord<String, String>(topicName, null, info),
+			producer.send(new ProducerRecord<String, String>(kafkaTopicName, null, info),
 					new Callback() {
 						public void onCompletion(RecordMetadata metadata, Exception ex) {
 							if (ex != null) {
 								LOGGER.error("kafka_send_fail,requestId=" + userRestContext.getRequestId() + ",topic="
-										+ topicName, ex);
+										+ kafkaTopicName, ex);
 							} else {
 								LOGGER.info("kafka_send_success,requestId=" + userRestContext.getRequestId()
-										+ ", topic=" + topicName + ", partition=" + metadata.partition() + ", offset="
+										+ ", topic=" + kafkaTopicName + ", partition=" + metadata.partition() + ", offset="
 										+ metadata.offset());
 							}
 						}
