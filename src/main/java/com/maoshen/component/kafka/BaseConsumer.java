@@ -50,8 +50,10 @@ public abstract class BaseConsumer implements InitializingBean {
 		Properties props = new Properties();
 		String kafkaIp = ResourceUtils.get("kafka.ip", "localhost");
 		String kafkaPort = ResourceUtils.get("kafka.port", "9092");
-		props.put("bootstrap.servers", kafkaIp + ":" + kafkaPort);
-		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort);
+		String kafkaServer = ResourceUtils.get("kafka.server","127.0.0.1:9092,127.0.0.1:9093");
+		props.put("bootstrap.servers", kafkaServer);
+		//props.put("bootstrap.servers", kafkaIp+":"+kafkaPort);
+		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort + ",kafkaServer:"+kafkaServer);
 
 		// 消费者的组id
 		props.put("group.id", groupId);
@@ -75,7 +77,7 @@ public abstract class BaseConsumer implements InitializingBean {
 				while(true){
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
-						//LOGGER.info("receive messag,info is:" + JSONObject.toJSONString(record));
+						LOGGER.info("receive messag,topic:{},partition:{},offset:{}",record.topic(),record.partition(),record.offset());
 						try {		
 							String receiveStr = record.value();
 							MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);

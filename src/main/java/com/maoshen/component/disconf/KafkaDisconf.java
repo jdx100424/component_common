@@ -12,6 +12,16 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 public class KafkaDisconf implements IDisconfUpdate {
 	private String kafkaIp;
 	private String kafkaPort;
+	private String kafkaServer;
+
+	@DisconfFileItem(name = "kafka.server", associateField = "kafkaServer")
+	public String getKafkaServer() {
+		return kafkaServer;
+	}
+
+	public void setKafkaServer(String kafkaServer) {
+		this.kafkaServer = kafkaServer;
+	}
 
 	@DisconfFileItem(name = "kafka.ip", associateField = "kafkaIp")
 	public String getKafkaIp() {
