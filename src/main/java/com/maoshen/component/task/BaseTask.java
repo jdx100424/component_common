@@ -9,9 +9,9 @@ public abstract class BaseTask{
 	public static final TimeUnit TIME_UNIT = TimeUnit.SECONDS;
 	
 	/**
-	 * 分布式超时假如如用户不写，默认是300秒
+	 * 分布式超时假如如用户不写，默认是10秒
 	 */
-	public static final Long DEFAULT_EXPIRE_TIME = 300L;
+	public static final Long DEFAULT_EXPIRE_TIME = 10L;
 	
 	/**
 	 * 分布式锁默认超时时间
