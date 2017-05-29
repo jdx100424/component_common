@@ -8,6 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.maoshen.component.kafka.util.KafkaUtil;
+import com.maoshen.component.other.ResourceUtils;
+import com.maoshen.component.task.util.TaskUtil;
+
 /**
  * 使用REDIS控制负载均衡，只允许一台机操作
  * https://my.oschina.net/lese/blog/308709
@@ -56,7 +60,15 @@ public abstract class BaseRedisTask extends BaseTask {
 
 	@SuppressWarnings("unchecked") 
 	public void doJob() {
-		LOGGER.info(getName() + "_"+Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " this thread is running,date is:"+new Date());
+		String taskGray = ResourceUtils.get("task.gray","true");
+		boolean isGray = TaskUtil.isTaskGray(taskGray);
+		LOGGER.info("isGray:" + isGray+ ","+getName() + "_"+Thread.currentThread().getName() + "_" + this.getClass() + "_" + this.getName() + " this thread is running,date is:"+new Date());
+		
+		if(isGray){
+			LOGGER.warn("name:{} is gray,not allow run the task",getName());
+			return;
+		}
+		
 		if (StringUtils.isNotBlank(getName())) {			
 			if (jedisTemplate.opsForValue().setIfAbsent(getName(), "true")) {
 				//如果用户没有定义超时时间或者值为0，会使用默认值
