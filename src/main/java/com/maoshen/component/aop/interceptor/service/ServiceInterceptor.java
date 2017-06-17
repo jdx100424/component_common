@@ -14,42 +14,49 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.aop.interceptor.BaseInterceptor;
+import com.maoshen.component.mybatis.Master;
+import com.maoshen.component.mybatis.MybatisReplicationDataSourceHolder;
+import com.maoshen.component.mybatis.MybatisReplicationInfo;
+import com.maoshen.component.mybatis.Slave;
 import com.maoshen.component.rest.UserRestContext;
 import com.maoshen.component.rpc.filter.constant.DubboContextFilterConstant;
 
 public abstract class ServiceInterceptor extends BaseInterceptor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceInterceptor.class);
 
-
 	/**
 	 * 业务拦截器，在指定时间内，增加对相同的请求ID进行拦截，
 	 */
 	@Around("pointcut()")
 	public Object around(ProceedingJoinPoint pjp) throws Throwable {
-		Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+		Object targetObject = pjp.getTarget();
+		String method = pjp.getSignature().getName();
+
+		Class<?>[] clazz = targetObject.getClass().getInterfaces();
+		Class<?>[] parameterTypes = ((MethodSignature) pjp.getSignature()).getMethod().getParameterTypes();
 
 		try {
-			Map<String,String> map = new HashMap<String,String>();
+			Map<String, String> map = new HashMap<String, String>();
 			map.put(DubboContextFilterConstant.RPC_USER_REST_CONTEXT, JSONObject.toJSONString(UserRestContext.get()));
 			RpcContext.getContext().setAttachments(map);
-			
-			Date startTime = null;
-			Date endTime = null;
-			if (isShowRunningTime()) {
-				startTime = new Date();
+
+			Method m = clazz[0].getMethod(method, parameterTypes);
+			MybatisReplicationInfo mybatisReplicationInfo = new MybatisReplicationInfo();
+			if (null != m) {
+				if (m.isAnnotationPresent(Master.class)) {
+					mybatisReplicationInfo.setMaster(true);
+				} else if (m.isAnnotationPresent(Slave.class)) {
+					mybatisReplicationInfo.setSlave(true);
+				}
 			}
+			MybatisReplicationDataSourceHolder.putDataSource(mybatisReplicationInfo);
+			LOGGER.info("==============" + JSONObject.toJSONString(mybatisReplicationInfo) + "=============");
 
 			// 原来的逻辑运行
 			Object result = pjp.proceed();
-
-			if (isShowRunningTime()) {
-				endTime = new Date();
-				LOGGER.info(getServiceName() + "_service method:{},startDate:{},endDate:{},times:{}", method.getName(),
-						startTime, endTime, (endTime.getTime() - startTime.getTime()) / 1000);
-			}
 			return result;
 		} catch (Exception e) {
-			LOGGER.error(getServiceName() + "_service method:{} exception", method.getName(), e);
+			LOGGER.error(getServiceName() + "_service method:{} exception", method, e);
 			throw e;
 		}
 	}
