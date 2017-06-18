@@ -32,7 +32,6 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 		Object targetObject = pjp.getTarget();
 		String method = pjp.getSignature().getName();
 
-		Class<?>[] clazz = targetObject.getClass().getInterfaces();
 		Class<?>[] parameterTypes = ((MethodSignature) pjp.getSignature()).getMethod().getParameterTypes();
 
 		try {
@@ -41,24 +40,21 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 			RpcContext.getContext().setAttachments(map);
 
 			MybatisReplicationInfo mybatisReplicationInfo = new MybatisReplicationInfo();
-			for(int i=0;i<clazz.length;i++){
-				Method m = clazz[i].getMethod(method, parameterTypes);
-				if (null != m) {
-						if (m.isAnnotationPresent(Master.class)) {
-						mybatisReplicationInfo.setMaster(true);
-						break;
-					} else if (m.isAnnotationPresent(Slave.class)) {
-						mybatisReplicationInfo.setSlave(true);
-						break;
-					} else if (m.isAnnotationPresent(Transactional.class)) {
-						mybatisReplicationInfo.setMaster(true);
-						break;
-					}	
-				}
+			Method m = targetObject.getClass().getMethod(method, parameterTypes);
+			if (null != m) {
+				if (m.isAnnotationPresent(Master.class)) {
+					mybatisReplicationInfo.setMaster(true);
+				} else if (m.isAnnotationPresent(Slave.class)) {
+					mybatisReplicationInfo.setSlave(true);
+				} else if (m.isAnnotationPresent(Transactional.class)) {
+					mybatisReplicationInfo.setMaster(true);
+				}	
 			}
+			
 			MybatisReplicationDataSourceHolder.putDataSource(mybatisReplicationInfo);
-			LOGGER.info("==============" + JSONObject.toJSONString(mybatisReplicationInfo) + "=============");
-
+			if(LOGGER.isDebugEnabled()){
+				LOGGER.info("==============" + JSONObject.toJSONString(mybatisReplicationInfo) + "=============");
+			}
 			// 原来的逻辑运行
 			Object result = pjp.proceed();
 			return result;
