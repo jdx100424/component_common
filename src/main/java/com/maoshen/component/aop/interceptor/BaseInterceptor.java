@@ -7,11 +7,7 @@ import org.aspectj.lang.annotation.Around;
  * 拦截器
  */
 public abstract class BaseInterceptor {
-	@Around("pointcut()")
-	public Object around(ProceedingJoinPoint pjp) throws Throwable {
-		Object result = pjp.proceed();
-		return result;
-	}
+	public abstract Object around(ProceedingJoinPoint pjp) throws Throwable;
 
 	/**
 	 * 使用标记定义切割范围 例如 @Pointcut("execution(* com.xx.xx.service..*.*(..))")

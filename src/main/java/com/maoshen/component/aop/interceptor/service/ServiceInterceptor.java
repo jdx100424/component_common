@@ -1,7 +1,6 @@
 package com.maoshen.component.aop.interceptor.service;
 
 import java.lang.reflect.Method;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,14 +58,5 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 			LOGGER.error(getServiceName() + "_service method:{} exception", method, e);
 			throw e;
 		}
-	}
-
-	/**
-	 * 时候显示运行SERVICE时间
-	 * 
-	 * @return
-	 */
-	public boolean isShowRunningTime() {
-		return true;
 	}
 }
