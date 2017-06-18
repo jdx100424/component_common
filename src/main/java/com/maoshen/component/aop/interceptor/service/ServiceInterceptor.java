@@ -9,6 +9,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.fastjson.JSONObject;
@@ -39,13 +40,20 @@ public abstract class ServiceInterceptor extends BaseInterceptor {
 			map.put(DubboContextFilterConstant.RPC_USER_REST_CONTEXT, JSONObject.toJSONString(UserRestContext.get()));
 			RpcContext.getContext().setAttachments(map);
 
-			Method m = clazz[0].getMethod(method, parameterTypes);
 			MybatisReplicationInfo mybatisReplicationInfo = new MybatisReplicationInfo();
-			if (null != m) {
-				if (m.isAnnotationPresent(Master.class)) {
-					mybatisReplicationInfo.setMaster(true);
-				} else if (m.isAnnotationPresent(Slave.class)) {
-					mybatisReplicationInfo.setSlave(true);
+			for(int i=0;i<clazz.length;i++){
+				Method m = clazz[i].getMethod(method, parameterTypes);
+				if (null != m) {
+						if (m.isAnnotationPresent(Master.class)) {
+						mybatisReplicationInfo.setMaster(true);
+						break;
+					} else if (m.isAnnotationPresent(Slave.class)) {
+						mybatisReplicationInfo.setSlave(true);
+						break;
+					} else if (m.isAnnotationPresent(Transactional.class)) {
+						mybatisReplicationInfo.setMaster(true);
+						break;
+					}	
 				}
 			}
 			MybatisReplicationDataSourceHolder.putDataSource(mybatisReplicationInfo);
