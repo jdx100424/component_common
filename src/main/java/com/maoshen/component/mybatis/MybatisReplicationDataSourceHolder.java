@@ -8,14 +8,14 @@ public class MybatisReplicationDataSourceHolder {
     public static final ThreadLocal<MybatisReplicationInfo> holder = new ThreadLocal<MybatisReplicationInfo>();
 
     public static String getDataSource(){
-    	MybatisReplicationInfo m = holder.get();
-    	if(m!=null && StringUtils.isNotBlank(m.getDataSourceName())){
-    		if(MASTER.equals(m.getDataSourceName()) || SLAVE.equals(m.getDataSourceName())){
-        		return m.getDataSourceName();
-    		}
-    	}
-    	return MybatisReplicationDataSourceHolder.MASTER;
-    }
+	    	MybatisReplicationInfo m = holder.get();
+	    	if(m!=null && StringUtils.isNotBlank(m.getDataSourceName())){
+	    		if(MASTER.equals(m.getDataSourceName()) || SLAVE.equals(m.getDataSourceName())){
+	        		return m.getDataSourceName();
+	    		}
+	    	}
+	    	return MybatisReplicationDataSourceHolder.MASTER;
+	}
     
     public static MybatisReplicationInfo getMasterOrSlave() {
         return holder.get();

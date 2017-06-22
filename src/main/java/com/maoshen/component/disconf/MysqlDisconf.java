@@ -19,6 +19,28 @@ public class MysqlDisconf implements IDisconfUpdate {
 	private String mysqlSlavePort;
 	private String mysqlSlaveUsername;
 	private String mysqlSlavePassword;
+	
+	//一主一从配置，dataSource名称
+	private String mysqlMasterDataSourceName;
+	private String mysqlSlaveDataSourceName;
+
+	@DisconfFileItem(name = "mysql.master.datasource.name", associateField = "mysqlMasterDataSourceName")
+	public String getMysqlMasterDataSourceName() {
+		return mysqlMasterDataSourceName;
+	}
+
+	public void setMysqlMasterDataSourceName(String mysqlMasterDataSourceName) {
+		this.mysqlMasterDataSourceName = mysqlMasterDataSourceName;
+	}
+
+	@DisconfFileItem(name = "mysql.slave.datasource.name", associateField = "mysqlSlaveDataSourceName")
+	public String getMysqlSlaveDataSourceName() {
+		return mysqlSlaveDataSourceName;
+	}
+
+	public void setMysqlSlaveDataSourceName(String mysqlSlaveDataSourceName) {
+		this.mysqlSlaveDataSourceName = mysqlSlaveDataSourceName;
+	}
 
 	@DisconfFileItem(name = "mysql.master.ip", associateField = "mysqlMasterIp")
 	public String getMysqlMasterIp() {
