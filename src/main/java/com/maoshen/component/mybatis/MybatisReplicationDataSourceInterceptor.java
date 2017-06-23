@@ -28,11 +28,6 @@ public class MybatisReplicationDataSourceInterceptor implements Interceptor {
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
-		if(LOGGER.isInfoEnabled()){
-			LOGGER.info("invocation Args:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getArgs()));
-			LOGGER.info("invocation Target:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getTarget()));
-			LOGGER.info("invocation Method:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getMethod()));
-		}
 		Object[] objects = invocation.getArgs();
 		MappedStatement ms = (MappedStatement) objects[0];
 		// 有强制指定了，直接设置

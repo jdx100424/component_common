@@ -34,11 +34,6 @@ public class MybatisRouteDataSourceInterceptor implements Interceptor {
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
-		if(LOGGER.isInfoEnabled()){
-			LOGGER.info("invocation Args:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getArgs()));
-			LOGGER.info("invocation Target:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getTarget()));
-			LOGGER.info("invocation Method:{}",com.alibaba.fastjson.JSONObject.toJSONString(invocation.getMethod()));
-		}
 		MybatisRouteInfo mybatisRouteInfo = MybatisRouteDataSourceHolder.get();
 		if(mybatisRouteInfo != null && StringUtils.isNotBlank(mybatisRouteInfo.getRouteId())){
 			//DAO有标记的话，分辨出哪个分表分库
