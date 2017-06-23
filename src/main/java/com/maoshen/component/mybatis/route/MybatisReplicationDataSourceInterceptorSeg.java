@@ -1,12 +1,15 @@
 package com.maoshen.component.mybatis.route;
 
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
@@ -24,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
-import com.maoshen.component.aop.interceptor.service.ServiceInterceptor;
+
 
 @Intercepts({ @Signature(type = StatementHandler.class, method = "prepare", args = { Connection.class }) })
 public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
@@ -41,9 +44,8 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 				DEFAULT_OBJECT_WRAPPER_FACTORY);
 		String originalSql = (String) metaStatementHandler.getValue("delegate.boundSql.sql");
 		BoundSql boundSql = (BoundSql) metaStatementHandler.getValue("delegate.boundSql");
+		//boundSql,parameterObject Map {id=1, param1=1}
 
-		// Configuration configuration = (Configuration) metaStatementHandler
-		// .getValue("delegate.configuration");
 		Object parameterObject = metaStatementHandler.getValue("delegate.boundSql.parameterObject");
 		if (originalSql != null && !originalSql.equals("")) {
 			MappedStatement mappedStatement = (MappedStatement) metaStatementHandler
@@ -53,17 +55,21 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 			Class<?> classObj = Class.forName(className);
 
 			// 根据配置自动生成分表SQL
-			/*
 			TableSeg tableSeg = classObj.getAnnotation(TableSeg.class);
+			LOGGER.info(JSONObject.toJSONString(boundSql.getParameterObject()));
 
 			if (tableSeg != null) {
-				AnalyzeActualSql as = new AnalyzeActualSql(mappedStatement, parameterObject, boundSql);
-				String newSql = as.getActualSql(originalSql, tableSeg);
-				if (newSql != null) {
-					LOGGER.info(tag, "分表后SQL =====>" + newSql);
-					metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
-				}
-			}*/
+				Object ParamObj = boundSql.getParameterObject();
+				Map<String,Object> ParamterMap = JSONObject.parseObject(ParamObj.toString(), Map.class);
+				LOGGER.info(JSONObject.toJSONString(ParamterMap));
+				String newSql = "";
+				
+				String tableName = tableSeg != null ? tableSeg.tableName().trim() : "";
+				String shardType = tableSeg != null ? tableSeg.shardType().trim() : "";
+				String shardBy = tableSeg != null ? tableSeg.shardBy().trim() : "";
+				
+				metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+			}
 		}
 
 		// 传递给下一个拦截器处理
