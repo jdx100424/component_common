@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -27,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
+import com.maoshen.component.mybatis.MybatisReplicationDataSourceHolder;
+import com.maoshen.component.mybatis.MybatisRouteUtil;
 
 
 @Intercepts({ @Signature(type = StatementHandler.class, method = "prepare", args = { Connection.class }) })
@@ -56,24 +59,42 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 
 			// 根据配置自动生成分表SQL
 			TableSeg tableSeg = classObj.getAnnotation(TableSeg.class);
+			DbSeg dbSeg = classObj.getAnnotation(DbSeg.class);
 			LOGGER.info(JSONObject.toJSONString(boundSql.getParameterObject()));
 
-			if (tableSeg != null) {
+			//分库，表相同
+			if (dbSeg != null) {
 				Object ParamObj = boundSql.getParameterObject();
 				Map<String,Object> ParamterMap = JSONObject.parseObject(ParamObj.toString(), Map.class);
 				LOGGER.info(JSONObject.toJSONString(ParamterMap));
-				String newSql = "";
-				
-				String tableName = tableSeg != null ? tableSeg.tableName().trim() : "";
-				String shardType = tableSeg != null ? tableSeg.shardType().trim() : "";
-				String shardBy = tableSeg != null ? tableSeg.shardBy().trim() : "";
-				
-				metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+				//String newSql = "";
+				String shardBy = dbSeg != null ? dbSeg.shardBy().trim() : "";
+				//没有配置分库字段，或者分库字段在SQL参数找不到的话，用默认的
+				if(StringUtils.isBlank(shardBy)){
+					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
+					return invocation.proceed();
+				}
+				Object shardByValue = ParamterMap.get(shardBy);
+				if(shardByValue == null || StringUtils.isBlank(shardByValue.toString())){
+					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
+					return invocation.proceed();
+				}
+				if(shardByValue instanceof Integer){
+					long resultRoute = MybatisRouteUtil.getRouteNumber((int)shardByValue);
+					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName(resultRoute);
+					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
+					return invocation.proceed();
+				}else if(shardByValue instanceof Long){
+					long resultRoute = MybatisRouteUtil.getRouteNumber((long)shardByValue);
+					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName(resultRoute);
+					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
+					return invocation.proceed();
+				}
+				//metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
 			}
 		}
 
 		// 传递给下一个拦截器处理
-
 		return invocation.proceed();
 
 	}

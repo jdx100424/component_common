@@ -31,24 +31,24 @@ public class MybatisReplicationDataSourceInterceptor implements Interceptor {
 		Object[] objects = invocation.getArgs();
 		MappedStatement ms = (MappedStatement) objects[0];
 		// 有强制指定了，直接设置
-		if (MybatisReplicationDataSourceHolder.getMasterOrSlave().isMaster()) {
+		if (MybatisReplicationDataSourceHolder.getDataSource().isMaster()) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("is use master by forse");
 			}
-			MybatisReplicationDataSourceHolder.getMasterOrSlave()
+			MybatisReplicationDataSourceHolder.getDataSource()
 					.setDataSourceName(MybatisReplicationDataSourceHolder.MASTER);
 			return invocation.proceed();
-		} else if (MybatisReplicationDataSourceHolder.getMasterOrSlave().isSlave()) {
+		} else if (MybatisReplicationDataSourceHolder.getDataSource().isSlave()) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("is use slave by forse");
 			}
-			MybatisReplicationDataSourceHolder.getMasterOrSlave()
+			MybatisReplicationDataSourceHolder.getDataSource()
 					.setDataSourceName(MybatisReplicationDataSourceHolder.SLAVE);
 			return invocation.proceed();
 		}
 		// 没有强制指定库的，根据SQL语句处理
 		if (ms.getSqlCommandType().equals(SqlCommandType.SELECT)) {
-			MybatisReplicationDataSourceHolder.getMasterOrSlave()
+			MybatisReplicationDataSourceHolder.getDataSource()
 					.setDataSourceName(MybatisReplicationDataSourceHolder.SLAVE);
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("is use slave by auto");
@@ -57,7 +57,7 @@ public class MybatisReplicationDataSourceInterceptor implements Interceptor {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("is use master by auto");
 			}
-			MybatisReplicationDataSourceHolder.getMasterOrSlave()
+			MybatisReplicationDataSourceHolder.getDataSource()
 					.setDataSourceName(MybatisReplicationDataSourceHolder.MASTER);
 		}
 		return invocation.proceed();

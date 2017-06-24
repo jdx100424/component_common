@@ -1,12 +1,10 @@
 package com.maoshen.component.mybatis;
 
-import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
-
-public class MybatisReplicationDataSource extends AbstractRoutingDataSource {
+public class MybatisReplicationDataSource extends MybatisAbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        return MybatisReplicationDataSourceHolder.getDataSource();
+        return MybatisReplicationDataSourceHolder.getDataSourceKeyName();
     }
 
 }
