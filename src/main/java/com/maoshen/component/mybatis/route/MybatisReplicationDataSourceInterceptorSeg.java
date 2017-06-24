@@ -65,7 +65,8 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 			//分库，表相同
 			if (dbSeg != null) {
 				Object ParamObj = boundSql.getParameterObject();
-				Map<String,Object> ParamterMap = JSONObject.parseObject(ParamObj.toString(), Map.class);
+				String s = JSONObject.toJSONString(ParamObj);
+				Map<String,Object> ParamterMap = JSONObject.parseObject(s, Map.class);
 				LOGGER.info(JSONObject.toJSONString(ParamterMap));
 				//String newSql = "";
 				String shardBy = dbSeg != null ? dbSeg.shardBy().trim() : "";
@@ -80,19 +81,20 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 					return invocation.proceed();
 				}
 				if(shardByValue instanceof Integer){
-					long resultRoute = MybatisRouteUtil.getRouteNumber((int)shardByValue);
-					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName(resultRoute);
+					//long resultRoute = MybatisRouteUtil.getRouteNumber((int)shardByValue);
+					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName((int)shardByValue);
 					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
 					return invocation.proceed();
 				}else if(shardByValue instanceof Long){
-					long resultRoute = MybatisRouteUtil.getRouteNumber((long)shardByValue);
-					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName(resultRoute);
+					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName((long)shardByValue);
 					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
 					return invocation.proceed();
 				}
 				//metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
 			}
 		}
+		//如无法匹配，强制使用使用默认的
+		MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
 
 		// 传递给下一个拦截器处理
 		return invocation.proceed();

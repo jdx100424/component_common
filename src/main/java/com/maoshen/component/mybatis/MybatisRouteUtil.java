@@ -27,7 +27,7 @@ public class MybatisRouteUtil {
 	}
 	
 	public static String getDataSourceKeyName(Integer id) throws Exception{
-		return getDataSourceKeyName(id);
+		return getDataSourceKeyName((long)id);
 	}
 	public static String getDataSourceKeyName(Long id) throws Exception{
 		long routeInt = getRouteNumber(id);
@@ -61,6 +61,6 @@ public class MybatisRouteUtil {
 		return result;
 	}
 	public static long getRouteNumber(Integer id) throws Exception{
-		return getRouteNumber(id);
+		return getRouteNumber((long)id);
 	}
 }
