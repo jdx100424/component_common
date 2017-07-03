@@ -91,7 +91,7 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 				if(StringUtils.isBlank(tableName) || StringUtils.isBlank(shardBy)){
 					throw new Exception("tableSeg tableName or shardBy is not allow null");
 				}
-				//如果参数没有包含路由ID，则查所有的表UNION，否则获取对应列的路由数字，查询
+				//如果参数没有包含路由ID，则查所有的表UNION ALL，否则获取对应列的路由数字，查询
 				Object shardByValue = ParamterMap.get(shardBy);
 				if(shardByValue ==null || StringUtils.isBlank(shardByValue.toString())){
 					//所有数据表一起查询

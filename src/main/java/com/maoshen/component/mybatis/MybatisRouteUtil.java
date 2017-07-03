@@ -90,7 +90,7 @@ public class MybatisRouteUtil {
 		for(int i=0;i<resolvedDataSources.size();i++){
 			//第一条默认是第一个表
 			if(i!=IS_FIRST){
-				newSql.append(" union ");
+				newSql.append(" union all ");
 				String unionSql = sql.replaceAll(tableName, tableName+i);
 				newSql.append(unionSql);
 			}
