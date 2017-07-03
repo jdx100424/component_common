@@ -1,17 +1,13 @@
 package com.maoshen.component.mybatis.route;
 
 import java.sql.Connection;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.ParameterMapping;
-import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
@@ -22,8 +18,6 @@ import org.apache.ibatis.reflection.factory.DefaultObjectFactory;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.wrapper.DefaultObjectWrapperFactory;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
-import org.apache.ibatis.session.ResultHandler;
-import org.apache.ibatis.session.RowBounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +29,6 @@ import com.maoshen.component.mybatis.MybatisRouteUtil;
 @Intercepts({ @Signature(type = StatementHandler.class, method = "prepare", args = { Connection.class }) })
 public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MybatisReplicationDataSourceInterceptorSeg.class);
-	private static final String tag = MybatisReplicationDataSourceInterceptorSeg.class.getName();
 	private static final ObjectFactory DEFAULT_OBJECT_FACTORY = new DefaultObjectFactory();
 	private static final ObjectWrapperFactory DEFAULT_OBJECT_WRAPPER_FACTORY = new DefaultObjectWrapperFactory();
 
@@ -50,7 +43,7 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 		//boundSql,parameterObject Map {id=1, param1=1}
 
 		Object parameterObject = metaStatementHandler.getValue("delegate.boundSql.parameterObject");
-		if (originalSql != null && !originalSql.equals("")) {
+		if (StringUtils.isNotBlank(originalSql)) {
 			MappedStatement mappedStatement = (MappedStatement) metaStatementHandler
 					.getValue("delegate.mappedStatement");
 			String id = mappedStatement.getId();
@@ -62,26 +55,21 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 			DbSeg dbSeg = classObj.getAnnotation(DbSeg.class);
 			LOGGER.info(JSONObject.toJSONString(boundSql.getParameterObject()));
 
-			//分库，表相同
+			//分库不分表
 			if (dbSeg != null) {
 				Object ParamObj = boundSql.getParameterObject();
 				String s = JSONObject.toJSONString(ParamObj);
 				Map<String,Object> ParamterMap = JSONObject.parseObject(s, Map.class);
 				LOGGER.info(JSONObject.toJSONString(ParamterMap));
-				//String newSql = "";
 				String shardBy = dbSeg != null ? dbSeg.shardBy().trim() : "";
-				//没有配置分库字段，或者分库字段在SQL参数找不到的话，用默认的
 				if(StringUtils.isBlank(shardBy)){
-					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
-					return invocation.proceed();
+					throw new Exception("标签分库字段不能为NULL");
 				}
 				Object shardByValue = ParamterMap.get(shardBy);
 				if(shardByValue == null || StringUtils.isBlank(shardByValue.toString())){
-					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
-					return invocation.proceed();
+					throw new Exception("分库字段值不能为NULL");
 				}
 				if(shardByValue instanceof Integer){
-					//long resultRoute = MybatisRouteUtil.getRouteNumber((int)shardByValue);
 					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName((int)shardByValue);
 					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
 					return invocation.proceed();
@@ -89,16 +77,53 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 					String dataSourceKeyName = MybatisRouteUtil.getDataSourceKeyName((long)shardByValue);
 					MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(dataSourceKeyName);
 					return invocation.proceed();
+				}else{
+					throw new Exception("此字段类型不支持");
 				}
-				//metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+			}else if(tableSeg!=null){
+				//分表不分库
+				Object ParamObj = boundSql.getParameterObject();
+				String s = JSONObject.toJSONString(ParamObj);
+				Map<String,Object> ParamterMap = JSONObject.parseObject(s, Map.class);
+				LOGGER.info(JSONObject.toJSONString(ParamterMap));
+				String shardBy = tableSeg != null ? tableSeg.shardBy().trim() : "";
+				String tableName = tableSeg != null ? tableSeg.tableName().trim() : "";
+				if(StringUtils.isBlank(tableName) || StringUtils.isBlank(shardBy)){
+					throw new Exception("tableSeg tableName or shardBy is not allow null");
+				}
+				//如果参数没有包含路由ID，则查所有的表UNION，否则获取对应列的路由数字，查询
+				Object shardByValue = ParamterMap.get(shardBy);
+				if(shardByValue ==null || StringUtils.isBlank(shardByValue.toString())){
+					//所有数据表一起查询
+					String newSql = MybatisRouteUtil.getUnionSql(originalSql,tableName);
+					metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+					return invocation.proceed();
+				}else{
+					if(shardByValue instanceof Integer){
+						long route = MybatisRouteUtil.getRouteNumber((int)shardByValue);
+						if(MybatisRouteUtil.isFirst(route)==false){
+							String newSql = originalSql.replaceAll(tableName, tableName+route);
+							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+						}
+						return invocation.proceed();
+					}else if(shardByValue instanceof Long){
+						long route = MybatisRouteUtil.getRouteNumber((long)shardByValue);
+						if(MybatisRouteUtil.isFirst(route)==false){
+							String newSql = originalSql.replaceAll(tableName, tableName+route);
+							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+						}
+						return invocation.proceed();
+					}else{
+						throw new Exception("此字段类型不支持");
+					}
+				}
+			}else{
+				//没有标记的话，直接返回
+				return invocation.proceed();
 			}
+		}else{
+			throw new Exception("sql is not allow null");
 		}
-		//如无法匹配，强制使用使用默认的
-		MybatisReplicationDataSourceHolder.getDataSource().setDataSourceName(null);
-
-		// 传递给下一个拦截器处理
-		return invocation.proceed();
-
 	}
 
 	@Override
