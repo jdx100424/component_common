@@ -85,15 +85,18 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 				//分表不分库
 				Object ParamObj = boundSql.getParameterObject();
 				String s = JSONObject.toJSONString(ParamObj);
-				Map<String,Object> ParamterMap = JSONObject.parseObject(s, Map.class);
-				LOGGER.info(JSONObject.toJSONString(ParamterMap));
+				Map<String,Object> paramterMap = JSONObject.parseObject(s, Map.class);
+				LOGGER.info(JSONObject.toJSONString(paramterMap));
 				String shardBy = tableSeg != null ? tableSeg.shardBy().trim() : "";
 				String tableName = tableSeg != null ? tableSeg.tableName().trim() : "";
 				if(StringUtils.isBlank(tableName) || StringUtils.isBlank(shardBy)){
 					throw new Exception("tableSeg tableName or shardBy is not allow null");
 				}
 				//如果参数没有包含路由ID，则查所有的表UNION ALL，否则获取对应列的路由数字，查询
-				Object shardByValue = ParamterMap.get(shardBy);
+				Object shardByValue =null;
+				if(paramterMap != null ){
+					shardByValue = paramterMap.get(shardBy);
+				}
 				if(shardByValue ==null || StringUtils.isBlank(shardByValue.toString())){
 					if(mappedStatement.getSqlCommandType().equals(SqlCommandType.SELECT)){
 						String newSql = MybatisRouteUtil.getUnionSql(originalSql,tableName);
