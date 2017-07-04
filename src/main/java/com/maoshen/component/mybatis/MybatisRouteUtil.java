@@ -10,6 +10,11 @@ public class MybatisRouteUtil {
 	private static Map<Object, DataSource> resolvedDataSources;
 	private static DataSource resolvedDefaultDataSource;
 	private static final long IS_FIRST = 0;
+	private static Long routeTableCount;
+	
+	public static void setRouteTableCount(Long value){
+		routeTableCount = value;
+	}
 	
 	public static DataSource getResolvedDefaultDataSource() {
 		return resolvedDefaultDataSource;
@@ -31,7 +36,7 @@ public class MybatisRouteUtil {
 		return getDataSourceKeyName((long)id);
 	}
 	public static String getDataSourceKeyName(Long id) throws Exception{
-		long routeInt = getRouteNumber(id);
+		long routeInt = getRouteNumberDb(id);
 		Iterator<Entry<Object, DataSource>> it = resolvedDataSources.entrySet().iterator();
 		long k = 0;
 		while(it.hasNext()){
@@ -44,14 +49,26 @@ public class MybatisRouteUtil {
 		throw new Exception("getDataSourceKeyName fail");
 	}
 
-	
+	public static long getRouteNumberTable(Long id) throws Exception{
+		if(id==null || id<=0){
+			throw new Exception("id不能为空");
+		}
+		if(routeTableCount==null || routeTableCount<=0){
+			throw new Exception("routeTableCount不能为空");
+		}
+		long result = id % routeTableCount;
+		return result;
+	}
+	public static long getRouteNumberTable(Integer id) throws Exception{
+		return getRouteNumberTable((long)id);
+	}
 	/**
-	 * 根据主键ID，获取路由值
+	 * 根据主键ID，获取fenku路由值
 	 * @param id
 	 * @return
 	 * @throws Exception
 	 */
-	public static long getRouteNumber(Long id) throws Exception{
+	public static long getRouteNumberDb(Long id) throws Exception{
 		if(id==null || id<=0){
 			throw new Exception("id不能为空");
 		}
@@ -61,16 +78,18 @@ public class MybatisRouteUtil {
 		long result = id % resolvedDataSources.size();
 		return result;
 	}
-	public static long getRouteNumber(Integer id) throws Exception{
-		return getRouteNumber((long)id);
+	public static long getRouteNumberDb(Integer id) throws Exception{
+		return getRouteNumberDb((long)id);
 	}
+	
+	
 	/**
 	 * 判断是否为第一个表（原来的名字）
 	 * @param route
 	 * @return
 	 */
-	public static boolean isFirst(long route){
-		long result = route % resolvedDataSources.size();
+	public static boolean isFirstTable(long route){
+		long result = route % routeTableCount;
 		if(result == IS_FIRST){
 			return true;
 		}else{
@@ -87,7 +106,7 @@ public class MybatisRouteUtil {
 	public static String getUnionSql(String sql,String tableName){
 		StringBuilder newSql = new StringBuilder();
 		newSql.append(sql);
-		for(int i=0;i<resolvedDataSources.size();i++){
+		for(int i=0;i<routeTableCount;i++){
 			//第一条默认是第一个表
 			if(i!=IS_FIRST){
 				newSql.append(" union all ");

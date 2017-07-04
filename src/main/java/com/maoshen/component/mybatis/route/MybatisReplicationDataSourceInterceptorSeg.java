@@ -103,15 +103,15 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 					throw new Exception("非select语句，路由值不能为空");
 				}else{
 					if(shardByValue instanceof Integer){
-						long route = MybatisRouteUtil.getRouteNumber((int)shardByValue);
-						if(MybatisRouteUtil.isFirst(route)==false){
+						long route = MybatisRouteUtil.getRouteNumberTable((int)shardByValue);
+						if(MybatisRouteUtil.isFirstTable(route)==false){
 							String newSql = originalSql.replaceAll(tableName, tableName+route);
 							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
 						}
 						return invocation.proceed();
 					}else if(shardByValue instanceof Long){
-						long route = MybatisRouteUtil.getRouteNumber((long)shardByValue);
-						if(MybatisRouteUtil.isFirst(route)==false){
+						long route = MybatisRouteUtil.getRouteNumberTable((long)shardByValue);
+						if(MybatisRouteUtil.isFirstTable(route)==false){
 							String newSql = originalSql.replaceAll(tableName, tableName+route);
 							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
 						}

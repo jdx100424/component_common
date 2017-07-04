@@ -25,6 +25,16 @@ public abstract class MybatisAbstractRoutingDataSource extends AbstractDataSourc
 	private Map<Object, DataSource> resolvedDataSources;
 
 	private DataSource resolvedDefaultDataSource;
+	
+	private Long routeTableCount; 
+
+	public Long getRouteTableCount() {
+		return routeTableCount;
+	}
+
+	public void setRouteTableCount(Long routeTableCount) {
+		this.routeTableCount = routeTableCount;
+	}
 
 	/**
 	 * Specify the map of target DataSources, with the lookup key as key.
@@ -97,6 +107,7 @@ public abstract class MybatisAbstractRoutingDataSource extends AbstractDataSourc
 		}
 		MybatisRouteUtil.setResolvedDataSources(resolvedDataSources);
 		MybatisRouteUtil.setResolvedDefaultDataSource(resolvedDefaultDataSource);
+		MybatisRouteUtil.setRouteTableCount(routeTableCount);
 	}
 
 	/**
