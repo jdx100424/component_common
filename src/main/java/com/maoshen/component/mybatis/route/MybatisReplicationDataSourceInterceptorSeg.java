@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
@@ -94,10 +95,12 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor {
 				//如果参数没有包含路由ID，则查所有的表UNION ALL，否则获取对应列的路由数字，查询
 				Object shardByValue = ParamterMap.get(shardBy);
 				if(shardByValue ==null || StringUtils.isBlank(shardByValue.toString())){
-					//所有数据表一起查询
-					String newSql = MybatisRouteUtil.getUnionSql(originalSql,tableName);
-					metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
-					return invocation.proceed();
+					if(mappedStatement.getSqlCommandType().equals(SqlCommandType.SELECT)){
+						String newSql = MybatisRouteUtil.getUnionSql(originalSql,tableName);
+						metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+						return invocation.proceed();
+					}
+					throw new Exception("非select语句，路由值不能为空");
 				}else{
 					if(shardByValue instanceof Integer){
 						long route = MybatisRouteUtil.getRouteNumber((int)shardByValue);
