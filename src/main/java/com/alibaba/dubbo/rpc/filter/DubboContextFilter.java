@@ -20,8 +20,10 @@ public class DubboContextFilter implements Filter{
 		//add userRestContext param
 		Map<String,String> map = RpcContext.getContext().getAttachments();
 		UserRestContext targetUserRestContext = JSONObject.parseObject(map.get(DubboContextFilterConstant.RPC_USER_REST_CONTEXT),UserRestContext.class);
-		UserRestContext.get().setAccessToken(targetUserRestContext.getAccessToken());
-		UserRestContext.get().setRequestId(targetUserRestContext.getRequestId());
+		if(targetUserRestContext!=null){
+			UserRestContext.get().setAccessToken(targetUserRestContext.getAccessToken());
+			UserRestContext.get().setRequestId(targetUserRestContext.getRequestId());
+		}
 		if(invocation instanceof RpcInvocation){
 			((RpcInvocation)invocation).setInvoker(invoker);
 		}
