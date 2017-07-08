@@ -1,6 +1,7 @@
 package com.maoshen.component.mybatis.route;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.fastjson.JSONObject;
-import com.maoshen.component.mybatis.MybatisRouteUtil;
 import com.maoshen.component.mybatis.route.regular.MybatisRoute;
 import com.maoshen.component.mybatis.route.regular.impl.DefaultMybatisRoute;
 
@@ -45,6 +45,14 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 	
 	private MybatisRoute mybatisRoute;
 	
+	public void setRouteTableCount(Integer routeTableCount) {
+		this.routeTableCount = routeTableCount;
+	}
+
+	public void setMybatisRoute(MybatisRoute mybatisRoute) {
+		this.mybatisRoute = mybatisRoute;
+	}
+
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		StatementHandler statementHandler = (StatementHandler) invocation.getTarget();
@@ -52,28 +60,24 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 		MetaObject metaStatementHandler = MetaObject.forObject(statementHandler, DEFAULT_OBJECT_FACTORY,
 				DEFAULT_OBJECT_WRAPPER_FACTORY,DEFAULT_REFLECTOR_FACTORY);
 		String originalSql = (String) metaStatementHandler.getValue("delegate.boundSql.sql");
-		BoundSql boundSql = (BoundSql) metaStatementHandler.getValue("delegate.boundSql");
-		
-		//boundSql,parameterObject Map {id=1, param1=1}
-		//Object parameterObject = metaStatementHandler.getValue("delegate.boundSql.parameterObject");
+		BoundSql boundSql = (BoundSql) metaStatementHandler.getValue("delegate.boundSql");		
 		
 		if (StringUtils.isNotBlank(originalSql)) {
-			MappedStatement mappedStatement = (MappedStatement) metaStatementHandler
-					.getValue("delegate.mappedStatement");
-			String id = mappedStatement.getId();
-			String className = id.substring(0, id.lastIndexOf("."));
+			MappedStatement mappedStatement = (MappedStatement) metaStatementHandler.getValue("delegate.mappedStatement");
+			String className = mappedStatement.getId().substring(0, mappedStatement.getId().lastIndexOf("."));
 			Class<?> classObj = Class.forName(className);
+
+			//保存原本的参数符信息
+			ArrayList<ParameterMapping> tempSqlParam = new ArrayList<ParameterMapping>();
+			tempSqlParam.addAll((ArrayList<ParameterMapping>)boundSql.getParameterMappings());
 
 			// 根据配置自动生成分表SQL
 			TableSeg tableSeg = classObj.getAnnotation(TableSeg.class);
-			//DbSeg dbSeg = classObj.getAnnotation(DbSeg.class);
 			LOGGER.info(JSONObject.toJSONString(boundSql.getParameterObject()));
 
 			if(tableSeg!=null){
 				//分表不分库
-				Object paramObj = boundSql.getParameterObject();
-				Map<String,Object> paramterMap = (Map<String, Object>) paramObj;
-				LOGGER.info(JSONObject.toJSONString(paramterMap));
+				Map<String,Object> paramterMap = (Map<String, Object>) boundSql.getParameterObject();
 				String shardBy = tableSeg != null ? tableSeg.shardBy().trim() : "";
 				String tableName = tableSeg != null ? tableSeg.tableName().trim() : "";
 				if(StringUtils.isBlank(tableName) || StringUtils.isBlank(shardBy)){
@@ -82,36 +86,41 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 				//如果参数没有包含路由ID，则查所有的表UNION ALL，否则获取对应列的路由数字，查询
 				Object shardByValue =null;
 				if(paramterMap != null ){
-					shardByValue = paramterMap.get(shardBy);
+					try{
+						shardByValue = paramterMap.get(shardBy);
+					}catch(Exception e){
+					}
 				}
 				if(shardByValue ==null || StringUtils.isBlank(shardByValue.toString())){
 					if(mappedStatement.getSqlCommandType().equals(SqlCommandType.SELECT)){
-						routeBoundSql(boundSql,metaStatementHandler);
-						String newSql = mybatisRoute.getUnionSql(originalSql,tableName,routeTableCount);
-						metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+						//构建多个？参数
+						originalSql = mybatisRoute.getUnionSql(originalSql,tableName,routeTableCount);
+						metaStatementHandler.setValue("delegate.boundSql.sql", originalSql);	
+						prepared(tempSqlParam, boundSql);
+						metaStatementHandler.setValue("delegate.boundSql",boundSql);
 						return invocation.proceed();
 					}
 					throw new Exception("非select语句，路由值不能为空");
 				}else{
 					if(shardByValue instanceof Integer){
-						long route = MybatisRouteUtil.getRouteNumberTable((int)shardByValue);
-						if(MybatisRouteUtil.isFirstTable(route)==false){
-							String newSql = originalSql.replaceAll(tableName, tableName+route);
-							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+						long route = mybatisRoute.getRouteNumberIntTable((int)shardByValue,routeTableCount);
+						if(mybatisRoute.isFirstTable(route,routeTableCount)==false){
+							originalSql = originalSql.replaceAll(tableName, tableName+route);
+							metaStatementHandler.setValue("delegate.boundSql.sql", originalSql);
 						}
 						return invocation.proceed();
 					}else if(shardByValue instanceof Long){
-						long route = mybatisRoute.getRouteNumberIntTable((int)shardByValue,routeTableCount);
+						long route = mybatisRoute.getRouteNumberLongTable((long)shardByValue,routeTableCount);
 						if(mybatisRoute.isFirstTable(route,routeTableCount)==false){
-							String newSql = originalSql.replaceAll(tableName, tableName+route);
-							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+							originalSql = originalSql.replaceAll(tableName, tableName+route);
+							metaStatementHandler.setValue("delegate.boundSql.sql", originalSql);
 						}
 						return invocation.proceed();
 					}else if(shardByValue instanceof String){
-						long route = mybatisRoute.getRouteNumberLongTable((long)shardByValue,routeTableCount);
+						long route = mybatisRoute.getRouteNumberStringTable(shardByValue.toString(),routeTableCount);
 						if(mybatisRoute.isFirstTable(route,routeTableCount)==false){
-							String newSql = originalSql.replaceAll(tableName, tableName+route);
-							metaStatementHandler.setValue("delegate.boundSql.sql", newSql);
+							originalSql = originalSql.replaceAll(tableName, tableName+route);
+							metaStatementHandler.setValue("delegate.boundSql.sql", originalSql);
 						}
 						return invocation.proceed();
 					}else{
@@ -124,6 +133,35 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 			}
 		}else{
 			throw new Exception("sql is not allow null");
+		}
+	}
+
+	private void prepared(ArrayList<ParameterMapping> tempSqlParam,BoundSql boundSql) throws SQLException {
+		try{
+			ArrayList<ParameterMapping> addList = new ArrayList<ParameterMapping>();
+			//非自身的时候，增加N－1个参数
+			for(int i=0;i<routeTableCount;i++){
+				if(mybatisRoute.isFirstTable(i,routeTableCount)==false){
+					for(ParameterMapping pm:tempSqlParam){
+						MetaObject javaBeanMeta = MetaObject.forObject(pm,
+				                DEFAULT_OBJECT_FACTORY, DEFAULT_OBJECT_WRAPPER_FACTORY, DEFAULT_REFLECTOR_FACTORY);
+						
+						Configuration configuration = (Configuration) javaBeanMeta.getValue("configuration");
+						String key =  (String) javaBeanMeta.getValue("property") ;
+						String property = key ;
+						Class<?> javaType = (Class<?>) javaBeanMeta.getValue("javaType");
+						
+						ParameterMapping newPm = new ParameterMapping.Builder(configuration,property,javaType).build();
+						//预编译参数设置
+						addList.add(newPm);
+					}
+				}
+			}
+			tempSqlParam.addAll(addList);
+			MetaObject boundSqlMeta = MetaObject.forObject(boundSql,DEFAULT_OBJECT_FACTORY, DEFAULT_OBJECT_WRAPPER_FACTORY, DEFAULT_REFLECTOR_FACTORY);
+			boundSqlMeta.setValue("parameterMappings",tempSqlParam);
+		}catch(Exception e){
+			LOGGER.error(e.getMessage(),e);
 		}
 	}
 
@@ -154,35 +192,5 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 		}else{
 			LOGGER.info("mybatisRoute is not null,use user custom MybatisRoute");	
 		}
-	}
-	
-	private void routeBoundSql(BoundSql boundSql,MetaObject metaStatementHandler) {
-		Object paramObj = boundSql.getParameterObject();
-		Map<String,Object> paramterMap = (Map<String, Object>) paramObj;
-		ArrayList<ParameterMapping> sqlParam = (ArrayList<ParameterMapping>) boundSql.getParameterMappings();
-		ArrayList<ParameterMapping> addList = new ArrayList<ParameterMapping>();
-		//非自身的时候，增加N－1个参数
-		for(int i=0;i<routeTableCount;i++){
-			if(mybatisRoute.isFirstTable(i,routeTableCount)==false){
-				for(ParameterMapping pm:sqlParam){
-					MetaObject javaBeanMeta = MetaObject.forObject(pm,
-			                DEFAULT_OBJECT_FACTORY, DEFAULT_OBJECT_WRAPPER_FACTORY, DEFAULT_REFLECTOR_FACTORY);
-					
-					Configuration configuration = (Configuration) javaBeanMeta.getValue("configuration");
-					String key =  (String) javaBeanMeta.getValue("property") ;
-					String property = key + Integer.toString(i);
-					Class<?> javaType = (Class<?>) javaBeanMeta.getValue("javaType");
-					
-					ParameterMapping newPm = new ParameterMapping.Builder(configuration,property,javaType).build();
-					//预编译参数设置
-					addList.add(newPm);
-					//具体参数
-					paramterMap.put(property, paramterMap.get(key));
-				}
-			}
-		}
-		sqlParam.addAll(addList);
-		metaStatementHandler.setValue("delegate.boundSql.parameterMappings",sqlParam);
-		metaStatementHandler.setValue("delegate.boundSql.parameterObject",paramObj);
 	}
 }
