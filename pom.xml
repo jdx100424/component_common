@@ -54,7 +54,7 @@
 		<guava.version>19.0</guava.version>
 		<dubbo-alibaba>2.5.3</dubbo-alibaba>
 		<junit.version>4.12</junit.version>
-		<mybatis.version>3.2.7</mybatis.version>
+		<mybatis.version>3.3.0</mybatis.version>
 	</properties>
 
 
