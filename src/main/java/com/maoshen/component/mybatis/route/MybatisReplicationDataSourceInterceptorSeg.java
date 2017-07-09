@@ -136,7 +136,7 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 		}
 	}
 
-	private void prepared(ArrayList<ParameterMapping> tempSqlParam,BoundSql boundSql) throws SQLException {
+	private void prepared(ArrayList<ParameterMapping> tempSqlParam,BoundSql boundSql) throws Exception {
 		try{
 			ArrayList<ParameterMapping> addList = new ArrayList<ParameterMapping>();
 			//非自身的时候，增加N－1个参数
@@ -162,6 +162,7 @@ public class MybatisReplicationDataSourceInterceptorSeg implements Interceptor,I
 			boundSqlMeta.setValue("parameterMappings",tempSqlParam);
 		}catch(Exception e){
 			LOGGER.error(e.getMessage(),e);
+			throw e;
 		}
 	}
 
