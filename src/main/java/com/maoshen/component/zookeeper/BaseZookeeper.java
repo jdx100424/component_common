@@ -1,5 +1,6 @@
 package com.maoshen.component.zookeeper;
 
+import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
@@ -8,25 +9,27 @@ import org.apache.zookeeper.ZooKeeper;
  * @author daxian.jianglifesense.com
  *
  */
-public class BaseZookeeper {
+public abstract class BaseZookeeper {
+	private static final Object object = new Object();
+	
 	protected ZooKeeper zooKeeper;
 	
 	private static final int TIME_OUT = 5000;
-	
-	public BaseZookeeper(String ipUrl) throws Exception {
-		this(null,ipUrl);
-	}
 
+	public BaseZookeeper(String ipUrl) throws Exception {
+		this(TIME_OUT,ipUrl);
+	}
+	
 	public BaseZookeeper(int timeout,String ipUrl) throws Exception {
-		this(null,timeout,ipUrl);
+		zooKeeper = new ZooKeeper(ipUrl, timeout,new Watcher(){
+			@Override
+			public void process(WatchedEvent event) {
+				synchronized(object){
+					runWatcher(event);
+				}
+			}
+		});
 	}
 	
-	public BaseZookeeper(Watcher watcher,String ipUrl) throws Exception {
-		this(watcher,TIME_OUT,ipUrl);
-	}
-	
-	public BaseZookeeper(Watcher watcher, int timeout,String ipUrl) throws Exception {
-		super();
-		zooKeeper = new ZooKeeper(ipUrl, timeout,watcher);
-	}
+	public abstract void runWatcher(WatchedEvent event);
 }
