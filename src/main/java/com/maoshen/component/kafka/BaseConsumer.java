@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.alibaba.fastjson.JSONObject;
+import com.maoshen.component.async.AsyncTaskProcesser;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.kafka.util.KafkaUtil;
@@ -26,7 +27,7 @@ import com.maoshen.component.rest.UserRestContext;
  * @author jdx
  *
  */
-public abstract class BaseConsumer implements InitializingBean {
+public abstract class BaseConsumer extends AsyncTaskProcesser implements InitializingBean {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseConsumer.class);
 	// 组ID
 	private String groupId;
@@ -40,7 +41,6 @@ public abstract class BaseConsumer implements InitializingBean {
 	private BaseProducer baseProducer;
 
 	public BaseConsumer() {
-		super();
 		this.groupId = getGroupIdANdTopicName().getGroupId();
 		this.topicName = getGroupIdANdTopicName().getTopicName();
 	}
@@ -91,18 +91,16 @@ public abstract class BaseConsumer implements InitializingBean {
 						if(LOGGER.isDebugEnabled()){
 							LOGGER.debug("receive messag,topic:{},partition:{},offset:{}",record.topic(),record.partition(),record.offset());
 						}
-						try {		
-							String receiveStr = record.value();
-							MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);
-							UserRestContext userRestContext = UserRestContext.get();
-							userRestContext.setAccessToken(dto.getUserRestContext().getAccessToken());
-							userRestContext.setRequestId(dto.getUserRestContext().getRequestId());
-							onMessage(dto);
-						} catch (Exception e) {
-							LOGGER.error(this.getClass().getName() + "  onMessageKafka error,topicName is:" + topicName,e);
-						} finally{
-							UserRestContext.clear();
+
+						//当处理线程满后，阻塞处理线程
+						while(executor.getMaximumPoolSize() <= executor.getActiveCount()){
+							try {
+								Thread.sleep(200);
+							} catch (Exception e) {
+								
+							}
 						}
+						runInExecutor(record);
 					}
 				}
 			}
@@ -110,6 +108,26 @@ public abstract class BaseConsumer implements InitializingBean {
 		LOGGER.info(this.getClass().getName() + " kafka is start,topicName is:" + topicName);
 	}
 	
+	protected void runInExecutor(ConsumerRecord<String, String> record) {
+		executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					String receiveStr = record.value();
+					MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);
+					UserRestContext userRestContext = UserRestContext.get();
+					userRestContext.setAccessToken(dto.getUserRestContext().getAccessToken());
+					userRestContext.setRequestId(dto.getUserRestContext().getRequestId());
+					onMessage(dto);
+				}catch(Exception e){
+					LOGGER.error(e.getMessage(),e);
+				}finally{
+					UserRestContext.clear();
+				}
+			}
+		});
+	}
+
 	/**
 	 * KAFKA接收信息后实际的操作逻辑
 	 * 

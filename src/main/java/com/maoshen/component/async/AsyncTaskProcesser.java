@@ -20,13 +20,18 @@ import org.springframework.scheduling.concurrent.DefaultManagedAwareThreadFactor
  * @Copyright (c) 2015, lifesense.com
  */
 public abstract class AsyncTaskProcesser {
+	//异步线程处理KAFKA消费端，同时运行的线程数
+	private static final int N_THREADS = 50;
 	
 	private final static Logger logger = LoggerFactory.getLogger(AsyncTaskProcesser.class);
 
 	protected ThreadPoolExecutor executor;
 
+	public AsyncTaskProcesser(){
+		this(N_THREADS);
+	}
+	
 	public AsyncTaskProcesser(int nThreads) {
-		
 		executor = new ThreadPoolExecutor(nThreads, nThreads, 60, TimeUnit.SECONDS,
 				new LinkedBlockingQueue<Runnable>(), //
 				new DefaultManagedAwareThreadFactory(),new MyRejectedExecutionHandler()) {
@@ -63,14 +68,11 @@ public abstract class AsyncTaskProcesser {
 	
 
 	protected class MyRejectedExecutionHandler implements RejectedExecutionHandler {
-	 
 	    @Override
 	    public void rejectedExecution(Runnable task, ThreadPoolExecutor executor) {
-
             if (!executor.isShutdown()) {
-            	task.run();
+            		task.run();
             }
-        
 	    }
 	}
 }
