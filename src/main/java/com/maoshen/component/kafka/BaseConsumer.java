@@ -1,6 +1,7 @@
 package com.maoshen.component.kafka;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.alibaba.fastjson.JSONObject;
 import com.maoshen.component.async.AsyncTaskProcesser;
+import com.maoshen.component.base.util.ServerLauncherStatus;
 import com.maoshen.component.kafka.dto.MessageDto;
 import com.maoshen.component.kafka.dto.MessageVo;
 import com.maoshen.component.kafka.util.KafkaUtil;
@@ -85,6 +87,11 @@ public abstract class BaseConsumer extends AsyncTaskProcesser implements Initial
 		// 使用线程监控KAFKA接收信息
 		new Thread() {
 			public void run() {
+				//等待服务完全启动后再消费消息
+				LOGGER.info("{},kafka启动线程，进行服务完全启动等待start：{}",Thread.currentThread().getName(),new Date());
+				ServerLauncherStatus.get().waitStarted();
+				LOGGER.info("{},kafka启动线程，进行服务完全启动等待end：{}",Thread.currentThread().getName(),new Date());
+				
 				while(true){
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
