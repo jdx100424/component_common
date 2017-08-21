@@ -88,7 +88,9 @@ public abstract class BaseConsumer implements InitializingBean {
 				while(true){
 					ConsumerRecords<String, String> records = consumer.poll(100);
 					for (ConsumerRecord<String, String> record : records) {
-						LOGGER.info("receive messag,topic:{},partition:{},offset:{}",record.topic(),record.partition(),record.offset());
+						if(LOGGER.isDebugEnabled()){
+							LOGGER.debug("receive messag,topic:{},partition:{},offset:{}",record.topic(),record.partition(),record.offset());
+						}
 						try {		
 							String receiveStr = record.value();
 							MessageDto dto = JSONObject.parseObject(receiveStr,MessageDto.class);
