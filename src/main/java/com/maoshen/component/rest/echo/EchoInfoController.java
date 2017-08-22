@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -46,12 +47,12 @@ public class EchoInfoController implements ApplicationContextAware{
 		Map<String, Object> map = new HashMap<String, Object>();
 		
 		if (StringUtils.isNotBlank(request.getParameter(DB)) && IS_NEED_CHECK.equals(request.getParameter(DB))) {
-			Map<String, org.mybatis.spring.SqlSessionTemplate> sqlSessionTemplateMap = applicationContext.getBeansOfType(org.mybatis.spring.SqlSessionTemplate.class);
-			if(sqlSessionTemplateMap==null || sqlSessionTemplateMap.isEmpty()){
+			SqlSessionTemplate sqlSessionTemplate = applicationContext.getBean(org.mybatis.spring.SqlSessionTemplate.class);
+			if(sqlSessionTemplate==null){
 				map.put(DB, SUCCESS + ",xml not fount");
 			}else{
 				try{
-					sqlSessionTemplateMap.get(0).selectOne("select 1");
+					sqlSessionTemplate.selectOne("select 1");
 					map.put(DB, SUCCESS);
 				}catch(Exception e){
 					LOGGER.error(e.getMessage(),e);
@@ -64,12 +65,12 @@ public class EchoInfoController implements ApplicationContextAware{
 		}
 		
 		if (StringUtils.isNotBlank(request.getParameter(REDIS)) && IS_NEED_CHECK.equals(request.getParameter(DB))) {
-			Map<String, RedisTemplate> redisTemplateMap = applicationContext.getBeansOfType(org.springframework.data.redis.core.RedisTemplate.class);
-			if(redisTemplateMap==null || redisTemplateMap.isEmpty()){
+			RedisTemplate redisTemplate = applicationContext.getBean(RedisTemplate.class);
+			if(redisTemplate==null){
 				map.put(REDIS, SUCCESS + ",xml not fount");
 			}else{
 				try{
-					redisTemplateMap.get(0).opsForValue().get("test");
+					redisTemplate.opsForValue().get("test");
 					map.put(REDIS, SUCCESS);
 				}catch(Exception e){
 					LOGGER.error(e.getMessage(),e);
