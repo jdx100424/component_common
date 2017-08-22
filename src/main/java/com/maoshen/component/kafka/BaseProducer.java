@@ -28,22 +28,22 @@ import com.maoshen.component.rest.UserRestContext;
 public class BaseProducer implements InitializingBean {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseProducer.class);
 
-	private boolean isGray;	
-	
+	private boolean isGray;
+
 	Properties props;
 
 	public void afterPropertiesSet() throws Exception {
 		props = new Properties();
 		String kafkaIp = ResourceUtils.get("kafka.ip", "localhost");
 		String kafkaPort = ResourceUtils.get("kafka.port", "9092");
-		String kafkaServer = ResourceUtils.get("kafka.server","127.0.0.1:9092,127.0.0.1:9093");
-		String kafkaGray = ResourceUtils.get("kafka.gray","false");
+		String kafkaServer = ResourceUtils.get("kafka.server", "127.0.0.1:9092,127.0.0.1:9093");
+		String kafkaGray = ResourceUtils.get("kafka.gray", "false");
 		isGray = KafkaUtil.iskafkaGray(kafkaGray);
-			
-		//props.put("bootstrap.servers", kafkaIp+":"+kafkaPort);
-		props.put("bootstrap.servers", kafkaServer);
-		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort + ",kafkaServer:"+kafkaServer);
 
+		// props.put("bootstrap.servers", kafkaIp+":"+kafkaPort);
+		props.put("bootstrap.servers", kafkaServer);
+		LOGGER.info("class:" + this.getClass().getName() + ",kafkaIp:" + kafkaIp + ",kafkaPort:" + kafkaPort
+				+ ",kafkaServer:" + kafkaServer);
 
 		// The "all" setting we have specified will result in blocking on the
 		// full commit of the record, the slowest but most durable setting.
@@ -70,34 +70,44 @@ public class BaseProducer implements InitializingBean {
 		if (dto == null) {
 			return;
 		}
-		//灰度环境判断
-		if(isGray){
-			topicName = KafkaUtil.GRAY_KAFKA + topicName; 
+		// 灰度环境判断
+		if (isGray) {
+			topicName = KafkaUtil.GRAY_KAFKA + topicName;
 		}
 		final String kafkaTopicName = topicName;
-		
+
 		try {
 			UserRestContext userRestContext = UserRestContext.get();
 			dto.setUserRestContext(userRestContext);
 			producer = new KafkaProducer<String, String>(props);
 			String info = JSONObject.toJSONString(dto);
-			producer.send(new ProducerRecord<String, String>(kafkaTopicName, null, info),
-					new Callback() {
-						public void onCompletion(RecordMetadata metadata, Exception ex) {
-							if (ex != null) {
-								LOGGER.error("kafka_send_fail,requestId=" + userRestContext.getRequestId() + ",topic="
-										+ kafkaTopicName, ex);
-							} else {
-								LOGGER.info("kafka_send_success,requestId=" + userRestContext.getRequestId()
-										+ ", topic=" + kafkaTopicName + ", partition=" + metadata.partition() + ", offset="
-										+ metadata.offset());
+			producer.send(new ProducerRecord<String, String>(kafkaTopicName, null, info), new Callback() {
+				public void onCompletion(RecordMetadata metadata, Exception ex) {
+					if (ex != null) {
+						LOGGER.error("kafka_send_fail,requestId=" + userRestContext.getRequestId() + ",topic="
+								+ kafkaTopicName, ex);
+						Producer<String, String> reProducer = null;
+						try {
+							reProducer = new KafkaProducer<String, String>(props);
+							reProducer.send(new ProducerRecord<String, String>(kafkaTopicName, null, info));
+							reProducer.flush();
+						} catch (Exception e) {
+							LOGGER.error(this.getClass().getName() + " reSend error,topicName is:" + kafkaTopicName, e);
+						} finally {
+							if (reProducer != null) {
+								reProducer.close();
 							}
 						}
-
-					});
+					} else {
+						LOGGER.info("kafka_send_success,requestId=" + userRestContext.getRequestId() + ", topic="
+								+ kafkaTopicName + ", partition=" + metadata.partition() + ", offset="
+								+ metadata.offset());
+					}
+				}
+			});
 			producer.flush();
 		} catch (Exception e) {
-			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + topicName, e);
+			LOGGER.error(this.getClass().getName() + " send error,topicName is:" + kafkaTopicName, e);
 		} finally {
 			if (producer != null) {
 				producer.close();
