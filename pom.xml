@@ -57,11 +57,17 @@
 		<dubbo-alibaba>2.5.3</dubbo-alibaba>
 		<junit.version>4.12</junit.version>
 		<mybatis.version>3.3.0</mybatis.version>
+		<mybatis-spring.version>1.2.2</mybatis-spring.version>
 	</properties>
 
 
 
 	<dependencies>
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-spring</artifactId>
+			<version>${mybatis-spring.version}</version>
+		</dependency>
 		<dependency>  
         	<groupId>org.apache.zookeeper</groupId>  
 			<artifactId>zookeeper</artifactId>  
