@@ -48,13 +48,13 @@ public class EchoInfoController implements ApplicationContextAware {
 
 		if (StringUtils.isNotBlank(request.getParameter(DB)) && IS_NEED_CHECK.equals(request.getParameter(DB))) {
 			try {
-				SqlSessionTemplate sqlSessionTemplate = applicationContext
-						.getBean(org.mybatis.spring.SqlSessionTemplate.class);
+				//SqlSessionTemplate sqlSessionTemplate = applicationContext.getBean(org.mybatis.spring.SqlSessionTemplate.class);
+				org.springframework.jdbc.core.JdbcTemplate sqlSessionTemplate = applicationContext.getBean(org.springframework.jdbc.core.JdbcTemplate.class);
 				if (sqlSessionTemplate == null) {
 					map.put(DB, SUCCESS + ",xml not fount");
 				} else {
 					try {
-						sqlSessionTemplate.selectOne("select 1");
+						sqlSessionTemplate.execute("select 1" );
 						map.put(DB, SUCCESS);
 					} catch (Exception e) {
 						LOGGER.error(e.getMessage(), e);
