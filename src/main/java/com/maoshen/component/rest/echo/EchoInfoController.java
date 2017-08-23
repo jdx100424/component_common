@@ -20,15 +20,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/echoInfo")
-public class EchoInfoController implements ApplicationContextAware{
+public class EchoInfoController implements ApplicationContextAware {
 	/**
-	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">  
-        <property name="sqlSessionFactory" ref="sqlSessionFactory" />  
-   		org.mybatis.spring.SqlSessionFactoryBean
-    </bean>  
-	 
+	 * <bean id="sqlSessionTemplate" class=
+	 * "org.mybatis.spring.SqlSessionTemplate">
+	 * <property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	 * org.mybatis.spring.SqlSessionFactoryBean </bean>
+	 * 
 	 */
-	
+
 	private static final String DB = "DB";
 	private static final String REDIS = "REDIS";
 	private static final String IS_NEED_CHECK = "0";
@@ -36,47 +36,56 @@ public class EchoInfoController implements ApplicationContextAware{
 	private static final Logger LOGGER = LoggerFactory.getLogger(EchoInfoController.class);
 
 	private ApplicationContext applicationContext;
-	
+
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = { RequestMethod.GET })
 	@ResponseBody
 	protected Map<String, Object> echoInfo(HttpServletRequest request) {
 		long echoStart = System.currentTimeMillis();
-		//最终检测结果
+		// 最终检测结果
 		boolean result = true;
 		Map<String, Object> map = new HashMap<String, Object>();
-		
+
 		if (StringUtils.isNotBlank(request.getParameter(DB)) && IS_NEED_CHECK.equals(request.getParameter(DB))) {
-			SqlSessionTemplate sqlSessionTemplate = applicationContext.getBean(org.mybatis.spring.SqlSessionTemplate.class);
-			if(sqlSessionTemplate==null){
-				map.put(DB, SUCCESS + ",xml not fount");
-			}else{
-				try{
-					sqlSessionTemplate.selectOne("select 1");
-					map.put(DB, SUCCESS);
-				}catch(Exception e){
-					LOGGER.error(e.getMessage(),e);
-					map.put(DB, e.getMessage());
-					result = false;
+			try {
+				SqlSessionTemplate sqlSessionTemplate = applicationContext
+						.getBean(org.mybatis.spring.SqlSessionTemplate.class);
+				if (sqlSessionTemplate == null) {
+					map.put(DB, SUCCESS + ",xml not fount");
+				} else {
+					try {
+						sqlSessionTemplate.selectOne("select 1");
+						map.put(DB, SUCCESS);
+					} catch (Exception e) {
+						LOGGER.error(e.getMessage(), e);
+						map.put(DB, e.getMessage());
+						result = false;
+					}
 				}
+			} catch (Exception e) {
+				map.put(DB, SUCCESS + ",xml not fount");
 			}
 		} else {
 			map.put(DB, SUCCESS + ",not check");
 		}
-		
+
 		if (StringUtils.isNotBlank(request.getParameter(REDIS)) && IS_NEED_CHECK.equals(request.getParameter(DB))) {
-			RedisTemplate redisTemplate = applicationContext.getBean(RedisTemplate.class);
-			if(redisTemplate==null){
-				map.put(REDIS, SUCCESS + ",xml not fount");
-			}else{
-				try{
-					redisTemplate.opsForValue().get("test");
-					map.put(REDIS, SUCCESS);
-				}catch(Exception e){
-					LOGGER.error(e.getMessage(),e);
-					map.put(REDIS, e.getMessage());
-					result = false;
+			try {
+				RedisTemplate redisTemplate = applicationContext.getBean(RedisTemplate.class);
+				if (redisTemplate == null) {
+					map.put(REDIS, SUCCESS + ",xml not fount");
+				} else {
+					try {
+						redisTemplate.opsForValue().get("test");
+						map.put(REDIS, SUCCESS);
+					} catch (Exception e) {
+						LOGGER.error(e.getMessage(), e);
+						map.put(REDIS, e.getMessage());
+						result = false;
+					}
 				}
+			} catch (Exception e) {
+				map.put(REDIS, SUCCESS + ",xml not fount");
 			}
 		} else {
 			map.put(REDIS, SUCCESS + ",not check");
