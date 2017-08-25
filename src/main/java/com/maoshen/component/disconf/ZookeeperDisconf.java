@@ -12,6 +12,16 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 public class ZookeeperDisconf implements IDisconfUpdate {
 	private String zookeeperIp;
 	private String zookeeperPort;
+	private String zookeeperUrl;
+
+	@DisconfFileItem(name = "zookeeper.url", associateField = "zookeeperUrl")
+	public String getZookeeperUrl() {
+		return zookeeperUrl;
+	}
+
+	public void setZookeeperUrl(String zookeeperUrl) {
+		this.zookeeperUrl = zookeeperUrl;
+	}
 
 	@DisconfFileItem(name = "zookeeper.ip", associateField = "zookeeperIp")
 	public String getZookeeperIp() {

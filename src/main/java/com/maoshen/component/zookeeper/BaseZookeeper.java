@@ -10,6 +10,8 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.maoshen.component.other.ResourceUtils;
+
 /**
  * 常规zookeeper
  * @author daxian.jianglifesense.com
@@ -24,6 +26,9 @@ public abstract class BaseZookeeper {
 	
 	private static final int TIME_OUT = 5000;
 
+	public BaseZookeeper(String mainTitle) throws Exception{
+		this(ResourceUtils.get("zookeeper.url", ""),mainTitle);
+	}
 	/**
 	 * 
 	 * @param ipUrl,zookeeper地址
