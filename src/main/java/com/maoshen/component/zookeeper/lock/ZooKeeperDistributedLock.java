@@ -1,14 +1,11 @@
 package com.maoshen.component.zookeeper.lock;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.zookeeper.CreateMode;
@@ -24,11 +21,18 @@ public class ZookeeperDistributedLock {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZookeeperDistributedLock.class);
 
 	private ZooKeeper zookeeper;
-	String rootPath = "/locks";
+	private String rootPath = "/locks";
+	
+	private String lockName;
+	private String trueLockName;
+	
+	private int lockTimeout = 10;
+	private TimeUnit timeUnit = TimeUnit.SECONDS;
 
-	public ZookeeperDistributedLock(ZooKeeper zookeeper) {
+	public ZookeeperDistributedLock(ZooKeeper zookeeper,String lockName) {
 		super();
 		this.zookeeper = zookeeper;
+		this.lockName = lockName;
 		ensureRoot();
 	}
 
@@ -42,47 +46,34 @@ public class ZookeeperDistributedLock {
 		}
 	}
 
-	public String tryLock(String path) {
+	public void tryLock() {
 		try {
-			String lockPath = rootPath + "/" + path;
+			String lockPath = rootPath + "/" + lockName;
 			String myPath = zookeeper.create(lockPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,
 					CreateMode.EPHEMERAL_SEQUENTIAL);
 			BlockingQueue<String> lock = new ArrayBlockingQueue<>(1);
 			lock(lockPath, myPath, lock);
-			lock.take();
-			return myPath;
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
-		}
-		return null;
-	}
-
-	public String tryLock(String path, long timeout, TimeUnit unit) {
-		try {
-			String lockPath = rootPath + "/" + path;
-			String myPath = zookeeper.create(lockPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,
-					CreateMode.EPHEMERAL_SEQUENTIAL);
-			BlockingQueue<String> lock = new ArrayBlockingQueue<>(1);
-			lock(lockPath, myPath, lock);
-			if (lock.poll(timeout, unit) != null) {
-				return myPath;
+			if (lock.poll(lockTimeout, timeUnit) != null) {
+				this.trueLockName = myPath;
+				return;
 			}
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(),e);
 		}
-		return null;
+		this.trueLockName = null;
+		//return false;
 	}
 
-	public boolean unLock(String path) {
+	public void unLock() {
 		try {
-			if (Objects.nonNull(zookeeper.exists(path, false))) {
-				zookeeper.delete(path, -1);
+			if (Objects.nonNull(zookeeper.exists(trueLockName, false))) {
+				zookeeper.delete(trueLockName, -1);
 			}
-			return true;
+			//return true;
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(),e);
 		}
-		return false;
+		//return false;
 	}
 
 	private void lock(String lockPath, String myPath, BlockingQueue<String> lock) {
@@ -122,26 +113,29 @@ public class ZookeeperDistributedLock {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ZookeeperDistributedLock lock = new ZookeeperDistributedLock(new ZooKeeper("192.168.30.183:2181", 60000, null));
-		int cunrrent = 10;
-		List<Callable<Boolean>> list = new ArrayList<>();
+		int cunrrent = 5;
 		System.out.println("start:"+new java.util.Date());
 		for (int i = 0; i < cunrrent; i++) {
-			list.add(() -> {
-				String path = lock.tryLock("abcdef000", 10, TimeUnit.SECONDS);
-				Thread.sleep(1000);
-				if (Objects.nonNull(path)) {
-					System.out.println(new java.util.Date()+",get lock ! path : " + path + " ,thread : " + Thread.currentThread().getName());
-					lock.unLock(path);
-				} else {
-					System.out.println(new java.util.Date()+",get lock failed !" + " ,thread : " + Thread.currentThread().getName());
+			new Thread(){
+				public void run(){
+					ZookeeperDistributedLock lock = null;
+					try {
+						lock = new ZookeeperDistributedLock(new ZooKeeper("192.168.30.183:2181", 60000, null),"jdx000");
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					lock.tryLock();
+					System.out.println(new java.util.Date()+",running ! path : " + lock.trueLockName + " ,thread : " + Thread.currentThread().getName());
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					lock.unLock();
 				}
-				return true;
-			});
+			}.start();
 		}
 		System.out.println("end:"+new java.util.Date());
-		ExecutorService threadPool = Executors.newFixedThreadPool(cunrrent);
-		threadPool.invokeAll(list);
-		threadPool.shutdown();
+		Thread.sleep(10000);
 	}
 }
