@@ -1,0 +1,147 @@
+package com.maoshen.component.zookeeper.lock;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Watcher.Event.EventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+
+public class ZookeeperDistributedLock {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ZookeeperDistributedLock.class);
+
+	private ZooKeeper zookeeper;
+	String rootPath = "/locks";
+
+	public ZookeeperDistributedLock(ZooKeeper zookeeper) {
+		super();
+		this.zookeeper = zookeeper;
+		ensureRoot();
+	}
+
+	private void ensureRoot() {
+		try {
+			if (Objects.isNull(zookeeper.exists(rootPath, false))) {
+				zookeeper.create(rootPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+	}
+
+	public String tryLock(String path) {
+		try {
+			String lockPath = rootPath + "/" + path;
+			String myPath = zookeeper.create(lockPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,
+					CreateMode.EPHEMERAL_SEQUENTIAL);
+			BlockingQueue<String> lock = new ArrayBlockingQueue<>(1);
+			lock(lockPath, myPath, lock);
+			lock.take();
+			return myPath;
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+		return null;
+	}
+
+	public String tryLock(String path, long timeout, TimeUnit unit) {
+		try {
+			String lockPath = rootPath + "/" + path;
+			String myPath = zookeeper.create(lockPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,
+					CreateMode.EPHEMERAL_SEQUENTIAL);
+			BlockingQueue<String> lock = new ArrayBlockingQueue<>(1);
+			lock(lockPath, myPath, lock);
+			if (lock.poll(timeout, unit) != null) {
+				return myPath;
+			}
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+		return null;
+	}
+
+	public boolean unLock(String path) {
+		try {
+			if (Objects.nonNull(zookeeper.exists(path, false))) {
+				zookeeper.delete(path, -1);
+			}
+			return true;
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+		return false;
+	}
+
+	private void lock(String lockPath, String myPath, BlockingQueue<String> lock) {
+		try {
+			List<String> children = zookeeper.getChildren(rootPath, false);
+			Collections.sort(children);
+			String littleThanMe = null;
+			String myName = myPath.substring(myPath.lastIndexOf("/") + 1, myPath.length());
+			for (String child : children) {
+				if (myName.equals(child) && Objects.isNull(littleThanMe)) {
+					lock.put("lock");
+					return;
+				} else if (child.compareTo(myName) < 0) {
+					littleThanMe = child;
+				} else {
+					break;
+				}
+			}
+			watchLittleThanMe(lockPath, myPath, lock, rootPath + "/" + littleThanMe);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+	}
+
+	private void watchLittleThanMe(String lockPath, String myPath, BlockingQueue<String> lock, String littleThanMe)
+			throws KeeperException, InterruptedException {
+		try {
+			zookeeper.exists(littleThanMe, event -> {
+				if (event.getType() == EventType.NodeDeleted) {
+					lock(lockPath, myPath, lock);
+				}
+			});// watch 比自己小的节点
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+			lock(lockPath, myPath, lock);
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		ZookeeperDistributedLock lock = new ZookeeperDistributedLock(new ZooKeeper("192.168.30.183:2181", 60000, null));
+		int cunrrent = 10;
+		List<Callable<Boolean>> list = new ArrayList<>();
+		System.out.println("start:"+new java.util.Date());
+		for (int i = 0; i < cunrrent; i++) {
+			list.add(() -> {
+				String path = lock.tryLock("abcdef000", 10, TimeUnit.SECONDS);
+				Thread.sleep(1000);
+				if (Objects.nonNull(path)) {
+					System.out.println(new java.util.Date()+",get lock ! path : " + path + " ,thread : " + Thread.currentThread().getName());
+					lock.unLock(path);
+				} else {
+					System.out.println(new java.util.Date()+",get lock failed !" + " ,thread : " + Thread.currentThread().getName());
+				}
+				return true;
+			});
+		}
+		System.out.println("end:"+new java.util.Date());
+		ExecutorService threadPool = Executors.newFixedThreadPool(cunrrent);
+		threadPool.invokeAll(list);
+		threadPool.shutdown();
+	}
+}
