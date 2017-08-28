@@ -69,11 +69,9 @@ public class ZookeeperDistributedLock {
 			if (Objects.nonNull(zookeeper.exists(trueLockName, false))) {
 				zookeeper.delete(trueLockName, -1);
 			}
-			//return true;
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(),e);
 		}
-		//return false;
 	}
 
 	private void lock(String lockPath, String myPath, BlockingQueue<String> lock) {
@@ -105,7 +103,7 @@ public class ZookeeperDistributedLock {
 				if (event.getType() == EventType.NodeDeleted) {
 					lock(lockPath, myPath, lock);
 				}
-			});// watch 比自己小的节点
+			});
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(),e);
 			lock(lockPath, myPath, lock);
