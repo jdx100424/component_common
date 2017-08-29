@@ -22,14 +22,14 @@ public class ZookeeperDistributedLock {
 
 	private ZooKeeper zookeeper;
 	private String rootPath = "/locks";
-	
+
 	private String lockName;
 	private String trueLockName;
-	
+
 	private int lockTimeout = 10;
 	private TimeUnit timeUnit = TimeUnit.SECONDS;
 
-	public ZookeeperDistributedLock(ZooKeeper zookeeper,String lockName) {
+	public ZookeeperDistributedLock(ZooKeeper zookeeper, String lockName) {
 		super();
 		this.zookeeper = zookeeper;
 		this.lockName = lockName;
@@ -42,11 +42,11 @@ public class ZookeeperDistributedLock {
 				zookeeper.create(rootPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
+			LOGGER.error(e.getMessage(), e);
 		}
 	}
 
-	public void tryLock() {
+	public void lock() throws Exception {
 		try {
 			String lockPath = rootPath + "/" + lockName;
 			String myPath = zookeeper.create(lockPath, "lock".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,
@@ -57,20 +57,21 @@ public class ZookeeperDistributedLock {
 				this.trueLockName = myPath;
 				return;
 			}
+			throw new Exception("lock fail");
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
+			LOGGER.error(e.getMessage(), e);
+			throw e;
 		}
-		this.trueLockName = null;
-		//return false;
 	}
 
-	public void unLock() {
+	public void unLock() throws Exception {
 		try {
 			if (Objects.nonNull(zookeeper.exists(trueLockName, false))) {
 				zookeeper.delete(trueLockName, -1);
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
+			LOGGER.error(e.getMessage(), e);
+			throw e;
 		}
 	}
 
@@ -92,7 +93,7 @@ public class ZookeeperDistributedLock {
 			}
 			watchLittleThanMe(lockPath, myPath, lock, rootPath + "/" + littleThanMe);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
+			LOGGER.error(e.getMessage(), e);
 		}
 	}
 
@@ -105,35 +106,44 @@ public class ZookeeperDistributedLock {
 				}
 			});
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(),e);
+			LOGGER.error(e.getMessage(), e);
 			lock(lockPath, myPath, lock);
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		int cunrrent = 5;
-		System.out.println("start:"+new java.util.Date());
+		System.out.println("start:" + new java.util.Date());
 		for (int i = 0; i < cunrrent; i++) {
-			new Thread(){
-				public void run(){
+			new Thread() {
+				public void run() {
 					ZookeeperDistributedLock lock = null;
 					try {
-						lock = new ZookeeperDistributedLock(new ZooKeeper("192.168.30.183:2181", 60000, null),"jdx000");
+						lock = new ZookeeperDistributedLock(new ZooKeeper("192.168.30.183:2181", 60000, null),
+								"jdx000");
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-					lock.tryLock();
-					System.out.println(new java.util.Date()+",running ! path : " + lock.trueLockName + " ,thread : " + Thread.currentThread().getName());
+
 					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						System.out.println(Thread.currentThread().getName() + ":start");
+						lock.lock();
+						System.out.println(new java.util.Date() + ",running ! path : " + lock.trueLockName
+								+ " ,thread : " + Thread.currentThread().getName());
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						lock.unLock();
+						System.out.println(Thread.currentThread().getName() + ":end");
+					} catch (Exception e1) {
+						e1.printStackTrace();
 					}
-					lock.unLock();
 				}
 			}.start();
 		}
-		System.out.println("end:"+new java.util.Date());
+		System.out.println("end:" + new java.util.Date());
 		Thread.sleep(10000);
 	}
 }
