@@ -57,7 +57,7 @@ public class UserFilter implements Filter {
 				ResponseResultDto<Object> result = new ResponseResultDto<Object>();
 				result.setCode(BaseErrorCode.URL_NOT_FOUND.getCode());
 				result.setMessage(BaseErrorCode.URL_NOT_FOUND.getMsg());
-				response.getWriter().write(JsonpUtil.restJsonp(request.getParameter("callback"), result));
+				responseWrapper.getResponse().getWriter().write(JsonpUtil.restJsonp(request.getParameter("callback"), result));
 			}
 		}catch(Exception e){
 			LOGGER.error(e.getMessage(),e);
