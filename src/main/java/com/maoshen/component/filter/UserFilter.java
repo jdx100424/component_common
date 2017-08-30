@@ -11,6 +11,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -18,6 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.fastjson.JSONObject;
+import com.maoshen.component.base.dto.ResponseResultDto;
+import com.maoshen.component.base.errorcode.BaseErrorCode;
+import com.maoshen.component.json.JsonpUtil;
 import com.maoshen.component.rest.UserRestContext;
 import com.maoshen.component.rpc.filter.constant.DubboContextFilterConstant;
 
@@ -43,7 +47,18 @@ public class UserFilter implements Filter {
 			map.put(DubboContextFilterConstant.RPC_USER_REST_CONTEXT, JSONObject.toJSONString(userRestContext));
 			RpcContext.getContext().setAttachments(map);
 			
-			chain.doFilter(request, response);
+			UserHttpServletResponseWrapper responseWrapper = new UserHttpServletResponseWrapper((HttpServletResponse)response);  
+			chain.doFilter(request, responseWrapper);
+			int status = responseWrapper.getStatus();  
+			if(LOGGER.isDebugEnabled()){
+				LOGGER.error("status:{}",status);
+			}
+			if(status == 404){
+				ResponseResultDto<Object> result = new ResponseResultDto<Object>();
+				result.setCode(BaseErrorCode.URL_NOT_FOUND.getCode());
+				result.setMessage(BaseErrorCode.URL_NOT_FOUND.getMsg());
+				response.getWriter().write(JsonpUtil.restJsonp(request.getParameter("callback"), result));
+			}
 		}catch(Exception e){
 			LOGGER.error(e.getMessage(),e);
 		}finally{

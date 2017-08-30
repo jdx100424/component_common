@@ -18,7 +18,6 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
 
     public XssHttpServletRequestWrapper(HttpServletRequest servletRequest) {
         super(servletRequest);
-        LOGGER.info("XssHttpServletRequestWrapper init");
     }
 
     @Override

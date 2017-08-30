@@ -8,7 +8,8 @@
 package com.maoshen.component.base.errorcode;
 
 public enum BaseErrorCode {
-	SERVICE_EXCEPTION(500,"系统发生错误");
+	SERVICE_EXCEPTION(500,"系统发生错误"),
+	URL_NOT_FOUND(404,"找不到路径");
 	
     private int    code; //错误代码
 
