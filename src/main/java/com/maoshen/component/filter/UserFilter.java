@@ -49,6 +49,7 @@ public class UserFilter implements Filter {
 			
 			UserHttpServletResponseWrapper responseWrapper = new UserHttpServletResponseWrapper((HttpServletResponse)response);  
 			chain.doFilter(request, responseWrapper);
+			/*
 			int status = responseWrapper.getStatus();  
 			if(LOGGER.isDebugEnabled()){
 				LOGGER.error("status:{}",status);
@@ -63,7 +64,7 @@ public class UserFilter implements Filter {
 				result.setCode(BaseErrorCode.SERVICE_EXCEPTION.getCode());
 				result.setMessage(BaseErrorCode.SERVICE_EXCEPTION.getMsg());
 				responseWrapper.getResponse().getWriter().write(JsonpUtil.restJsonp(request.getParameter("callback"), result));
-			}
+			}*/
 		}catch(Exception e){
 			LOGGER.error(e.getMessage(),e);
 		}finally{

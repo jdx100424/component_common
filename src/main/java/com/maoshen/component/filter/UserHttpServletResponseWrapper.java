@@ -33,7 +33,7 @@ public class UserHttpServletResponseWrapper extends HttpServletResponseWrapper {
 	@Override
 	public void sendError(int sc, String msg) throws IOException {
 		httpStatus = sc;
-		//super.sendError(sc, msg);
+		super.sendError(sc, msg);
 	}
 
 	@Override
