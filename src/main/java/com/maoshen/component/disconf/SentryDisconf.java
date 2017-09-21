@@ -11,7 +11,7 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 public class SentryDisconf implements IDisconfUpdate {
 	private String dsn;
 	private String uncaughtHandlerEnabled;
-	private String stacktraceAppPackages;
+	private String sentryStacktraceAppPackages;
 
 	@Override
 	public void reload() throws Exception {
@@ -36,12 +36,12 @@ public class SentryDisconf implements IDisconfUpdate {
 		this.uncaughtHandlerEnabled = uncaughtHandlerEnabled;
 	}
 
-	@DisconfFileItem(name = "stacktrace.app.packages", associateField = "stacktraceAppPackages")
-	public String getStacktraceAppPackages() {
-		return stacktraceAppPackages;
+	@DisconfFileItem(name = "sentry.stacktrace.app.packages", associateField = "sentryStacktraceAppPackages")
+	public String getSentryStacktraceAppPackages() {
+		return sentryStacktraceAppPackages;
 	}
 
-	public void setStacktraceAppPackages(String stacktraceAppPackages) {
-		this.stacktraceAppPackages = stacktraceAppPackages;
+	public void setSentryStacktraceAppPackages(String sentryStacktraceAppPackages) {
+		this.sentryStacktraceAppPackages = sentryStacktraceAppPackages;
 	}
 }
