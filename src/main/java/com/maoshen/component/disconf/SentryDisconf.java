@@ -10,7 +10,7 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 @DisconfFile(filename = "sentry.properties")
 public class SentryDisconf implements IDisconfUpdate {
 	private String dsn;
-	private String uncaughtHandlerEnabled;
+	private String sentryUncaughtHandlerEnabled;
 	private String sentryStacktraceAppPackages;
 
 	@Override
@@ -25,20 +25,20 @@ public class SentryDisconf implements IDisconfUpdate {
 
 	public void setDsn(String dsn) {
 		this.dsn = dsn;
-	}
-
-	@DisconfFileItem(name = "uncaught.handler.enabled", associateField = "uncaughtHandlerEnabled")
-	public String getUncaughtHandlerEnabled() {
-		return uncaughtHandlerEnabled;
-	}
-
-	public void setUncaughtHandlerEnabled(String uncaughtHandlerEnabled) {
-		this.uncaughtHandlerEnabled = uncaughtHandlerEnabled;
-	}
+	}	
 
 	@DisconfFileItem(name = "sentry.stacktrace.app.packages", associateField = "sentryStacktraceAppPackages")
 	public String getSentryStacktraceAppPackages() {
 		return sentryStacktraceAppPackages;
+	}
+
+	@DisconfFileItem(name = "sentry.uncaught.handler.enabled", associateField = "sentryUncaughtHandlerEnabled")
+	public String getSentryUncaughtHandlerEnabled() {
+		return sentryUncaughtHandlerEnabled;
+	}
+
+	public void setSentryUncaughtHandlerEnabled(String sentryUncaughtHandlerEnabled) {
+		this.sentryUncaughtHandlerEnabled = sentryUncaughtHandlerEnabled;
 	}
 
 	public void setSentryStacktraceAppPackages(String sentryStacktraceAppPackages) {
