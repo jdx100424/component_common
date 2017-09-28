@@ -20,6 +20,5 @@ public class Log4jDisconf implements IDisconfUpdate {
 		//自动重新读取配置  
 		String log4jPath = this.getClass().getClassLoader().getResource("log4j.properties").getPath();  
         PropertyConfigurator.configureAndWatch(log4jPath, 1);  
-		LOGGER.error("log4j.disconf.reload");
 	}
 }
