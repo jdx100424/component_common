@@ -20,11 +20,12 @@ public class SentryProvider {
 	public static void sendLog(String projectName, String message, io.sentry.event.Event.Level event,
 			org.slf4j.Logger logger, Exception e) {
 		if (isInit) {
-			//EventBuilder eventBuilder = new EventBuilder().withMessage(message).withLevel(event).withLogger(logger.getName());
+			EventBuilder eventBuilder = new EventBuilder().withMessage(message).withLevel(event).withLogger(logger.getName());
 			Sentry.getContext().addTag(PROJECT_NAME, projectName);
 			if (e != null) {
 				Sentry.getContext().addExtra("exception", ExceptionUtils.getStackTrace(e));
 			}
+			/*
 			switch (event) {
 			case DEBUG:
 				logger.debug(message);
@@ -36,8 +37,8 @@ public class SentryProvider {
 				logger.error(message);
 			default:
 				logger.error(message);
-			}
-			// Sentry.capture(eventBuilder);
+			}*/
+			Sentry.capture(eventBuilder);
 		}
 	}
 
