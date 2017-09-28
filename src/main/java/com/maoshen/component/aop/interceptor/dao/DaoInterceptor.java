@@ -26,7 +26,7 @@ public abstract class DaoInterceptor extends BaseInterceptor {
 			return result;
 		}catch (Exception e) {
 			if(e instanceof DuplicateKeyException == false){
-				SentryProvider.sendLog(getServiceName(), "method:"+method+",visit db is error", Event.Level.ERROR, LOGGER);
+				SentryProvider.sendLog(getServiceName(), "method:"+method+",visit db is error", Event.Level.ERROR, LOGGER,e);
 			}
 			LOGGER.error(getServiceName() + "_dao method:{} exception", method, e);
 			throw e;
