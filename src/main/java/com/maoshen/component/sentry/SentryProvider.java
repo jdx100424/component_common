@@ -2,6 +2,8 @@ package com.maoshen.component.sentry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.maoshen.component.other.ResourceUtils;
 
@@ -11,6 +13,7 @@ import io.sentry.event.EventBuilder;
 public class SentryProvider {
 	private static boolean isInit = false;
 	private static final String PROJECT_NAME = "projectName";
+	private static final Logger LOGGER = LoggerFactory.getLogger(SentryProvider.class);
 
 	public static void sendLog(String projectName, String message, io.sentry.event.Event.Level event,
 			org.slf4j.Logger logger) {
@@ -45,8 +48,12 @@ public class SentryProvider {
 	public static void init() {
 		String dsn = ResourceUtils.get("dsn", "");
 		if (StringUtils.isNotBlank(ResourceUtils.get("dsn", ""))) {
-			Sentry.init(dsn);
-			isInit = true;
+			try{
+				Sentry.init(dsn);
+				isInit = true;
+			}catch(Exception e){
+				LOGGER.error(e.getMessage(),e);
+			}
 		}
 	}
 }
