@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import com.maoshen.component.aop.interceptor.BaseInterceptor;
+import com.maoshen.component.rest.UserRestContext;
 import com.maoshen.component.sentry.SentryProvider;
 
 import io.sentry.event.Event;
@@ -20,6 +21,7 @@ public abstract class DaoInterceptor extends BaseInterceptor {
 	@Around("pointcut()")
 	public Object around(ProceedingJoinPoint pjp) throws Throwable {
 		String method = pjp.getSignature().getName();
+		UserRestContext.get().setLatestDaoName(method);
 		try {
 			// 原来的逻辑运行
 			Object result = pjp.proceed();
@@ -30,6 +32,8 @@ public abstract class DaoInterceptor extends BaseInterceptor {
 			}
 			LOGGER.error(getServiceName() + "_dao method:{} exception", method, e);
 			throw e;
+		}finally{
+			UserRestContext.get().setLatestDaoName("");
 		}
 	}
 }

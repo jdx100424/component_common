@@ -1,6 +1,16 @@
 package com.maoshen.component.rest;
 
 public class UserRestContext extends BaseRestContext{
+	private String latestDaoName;
+	
+	public String getLatestDaoName() {
+		return latestDaoName;
+	}
+
+	public void setLatestDaoName(String latestDaoName) {
+		this.latestDaoName = latestDaoName;
+	}
+
 	public UserRestContext(){
 		
 	}
