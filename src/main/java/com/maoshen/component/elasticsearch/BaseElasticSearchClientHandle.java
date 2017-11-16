@@ -18,21 +18,31 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.maoshen.component.disconf.ElasticSearchDisconf;
+import com.maoshen.component.disconf.ZipkinDisconf;
 
 @Configuration
 public class BaseElasticSearchClientHandle {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseElasticSearchClientHandle.class);
 	private static Client client;
 	private static boolean isInit = false;
+	@Autowired
+	private ElasticSearchDisconf elasticSearchDisconf;
 
 	@Bean
 	public Client initClient() throws Exception {
-		Client client = TransportClient.builder().build()
-				.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
-		isInit = true;
-		return client;
+		if (elasticSearchDisconf != null) {
+			Client client = TransportClient.builder().build()
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchDisconf.getElasticSearchUrl()), 9300));
+			isInit = true;
+			return client;
+		} else {
+			throw new Exception("elasticSearchDisconf is not allow null");
+		}
 	}
 
 	public static Client getClient() throws Exception {
