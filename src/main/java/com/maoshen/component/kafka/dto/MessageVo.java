@@ -4,9 +4,9 @@ public enum MessageVo {
 	/**
 	 * ECHO KAFKA消息测试
 	 */
-	ECHO_MESSAGE("groupEcho","topicEcho"),
-	ECHO_MESSAGE_SUB("groupEcho","topicEchoSub"),
-	JDX_MESSAGE("groupJdx","topicJdx");
+	ECHO_MESSAGE("groupEchoTest","topicEchoTest"),
+	ECHO_MESSAGE_SUB("groupEchoTest","topicEchoSubTest"),
+	JDX_MESSAGE("groupJdxTest","topicJdxTest");
 
 	private String groupId;
 

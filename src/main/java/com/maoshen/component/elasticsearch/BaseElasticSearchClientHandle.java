@@ -37,7 +37,8 @@ public class BaseElasticSearchClientHandle {
 	public Client initClient() throws Exception {
 		if (elasticSearchDisconf != null) {
 			Client client = TransportClient.builder().build()
-					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchDisconf.getElasticSearchUrl()), 9300));
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchDisconf.getElasticSearchUrl()), Integer.parseInt(elasticSearchDisconf.getElasticSearchPort())));
+			BaseElasticSearchClientHandle.client = client;
 			isInit = true;
 			return client;
 		} else {

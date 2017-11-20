@@ -10,6 +10,18 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 @DisconfFile(filename = "elasticSearch.properties")
 public class ElasticSearchDisconf implements IDisconfUpdate {
 	private String elasticSearchUrl;
+	
+	private String elasticSearchPort;
+
+	
+	@DisconfFileItem(name = "elasticSearch.port", associateField = "elasticSearchPort")
+	public String getElasticSearchPort() {
+		return elasticSearchPort;
+	}
+
+	public void setElasticSearchPort(String elasticSearchPort) {
+		this.elasticSearchPort = elasticSearchPort;
+	}
 
 	@Override
 	public void reload() throws Exception {
