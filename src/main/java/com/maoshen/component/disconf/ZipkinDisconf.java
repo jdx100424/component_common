@@ -10,7 +10,18 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 @DisconfFile(filename = "zipkin.properties")
 public class ZipkinDisconf implements IDisconfUpdate {
 	private String zipkinUrl;
+	private String zipkinService;
 	
+	
+	@DisconfFileItem(name = "zipkin.service", associateField = "zipkinService")
+	public String getZipkinService() {
+		return zipkinService;
+	}
+
+	public void setZipkinService(String zipkinService) {
+		this.zipkinService = zipkinService;
+	}
+
 	@DisconfFileItem(name = "zipkin.url", associateField = "zipkinUrl")
 	public String getZipkinUrl() {
 		return zipkinUrl;

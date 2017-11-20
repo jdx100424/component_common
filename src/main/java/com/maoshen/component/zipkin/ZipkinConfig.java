@@ -41,8 +41,12 @@ public class ZipkinConfig {
 
 	// 作为各调用链路，只需要负责将指定格式的数据发送给zipkin
 	@Bean
-	public Brave brave(SpanCollector spanCollector) {
-		com.github.kristofa.brave.Brave.Builder builder = new com.github.kristofa.brave.Brave.Builder("service1");// 指定serviceName
+	public Brave brave(SpanCollector spanCollector) throws Exception {
+		String serviceName = zipkinDisconf.getZipkinService();
+		if(StringUtils.isBlank(serviceName)){
+			throw new Exception("zipkinDisconf.serviceName is not allow null");
+		}
+		com.github.kristofa.brave.Brave.Builder builder = new com.github.kristofa.brave.Brave.Builder(serviceName);// 指定serviceName
 		builder.spanCollector(spanCollector);
 		builder.traceSampler(Sampler.create(1));// 采集率
 		return  builder.build();
