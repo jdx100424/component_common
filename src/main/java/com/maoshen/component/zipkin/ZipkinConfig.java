@@ -80,7 +80,7 @@ public class ZipkinConfig {
 	public OkHttpClient okHttpClient(Brave brave) {
 		OkHttpClient httpClient = new OkHttpClient.Builder()
 				.addInterceptor(new BraveOkHttpRequestResponseInterceptor(brave.clientRequestInterceptor(),
-						brave.clientResponseInterceptor(), new DefaultSpanNameProvider()))
+						brave.clientResponseInterceptor(), new BaseSpanNameProvider()))
 				.build();
 		return httpClient;
 	}
