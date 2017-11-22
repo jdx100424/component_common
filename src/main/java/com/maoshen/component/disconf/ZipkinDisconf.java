@@ -11,11 +11,20 @@ import com.baidu.disconf.client.common.update.IDisconfUpdate;
 public class ZipkinDisconf implements IDisconfUpdate {
 	private String zipkinUrl;
 	private String zipkinService;
-	
-	
+	private String zipkinPercent;
+
+	@DisconfFileItem(name = "zipkin.percent", associateField = "zipkinPercent")
+	public String getZipkinPercent() {
+		return zipkinPercent;
+	}
+
 	@DisconfFileItem(name = "zipkin.service", associateField = "zipkinService")
 	public String getZipkinService() {
 		return zipkinService;
+	}
+
+	public void setZipkinPercent(String zipkinPercent) {
+		this.zipkinPercent = zipkinPercent;
 	}
 
 	public void setZipkinService(String zipkinService) {
@@ -33,6 +42,6 @@ public class ZipkinDisconf implements IDisconfUpdate {
 
 	@Override
 	public void reload() throws Exception {
-	
+
 	}
 }
