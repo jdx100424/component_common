@@ -60,6 +60,12 @@ public class ZipkinConfig {
 		builder.traceSampler(Sampler.create(percent));// 采集率
 		return  builder.build();
 	}
+	
+	@Bean
+	public com.github.kristofa.brave.dubbo.BraveDubboManagementBean BraveDubboManagementBean(Brave brave) {
+		com.github.kristofa.brave.dubbo.BraveDubboManagementBean braveDubboManagementBean = new com.github.kristofa.brave.dubbo.BraveDubboManagementBean(brave);
+		return braveDubboManagementBean;
+	}
 
 	// 设置server的（服务端收到请求和服务端完成处理，并将结果发送给客户端）过滤器
 	@Bean
