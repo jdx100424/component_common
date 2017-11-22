@@ -5,16 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.DefaultManagedAwareThreadFactory;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.kristofa.brave.AbstractSpanCollector;
 import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
 import com.github.kristofa.brave.SpanCollectorMetricsHandler;
@@ -22,6 +26,9 @@ import com.google.auto.value.AutoValue;
 import com.twitter.zipkin.gen.SpanCodec;
 
 public final class BaseHttpSpanCollector extends AbstractSpanCollector {
+	//超过2秒才向ZIPKIN发送 
+	private static final int OVER_TIME = 2000000;
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseHttpSpanCollector.class);
 	
 	protected ThreadPoolExecutor executor = new ThreadPoolExecutor(50, 50, 60, TimeUnit.SECONDS,
@@ -117,7 +124,10 @@ public final class BaseHttpSpanCollector extends AbstractSpanCollector {
 
 	@Override
 	protected void sendSpans(byte[] json) throws IOException {
-		executor.submit(new asyncTask(json));
+		// 只收集2秒以上的
+		if(checkIsNeedSendZipkin(json)){
+			executor.submit(new asyncTask(json));
+		}
 	}
 	
 	protected class MyRejectedExecutionHandler implements RejectedExecutionHandler {
@@ -172,5 +182,27 @@ public final class BaseHttpSpanCollector extends AbstractSpanCollector {
 				LOGGER.error(e.getMessage(),e);
 			}
 		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private boolean checkIsNeedSendZipkin(byte[] json) {
+		String jsonStr = new String(json);
+		List list = JSONObject.parseObject(jsonStr, List.class);
+		if (list != null && list.isEmpty() == false) {
+			for(Object o:list){
+				String str = JSONObject.toJSONString(o);
+				Map map = JSONObject.parseObject(str, Map.class);
+				if (map != null && map.isEmpty() == false) {
+					Object parentId = map.get("parentId");
+					if(parentId==null || StringUtils.isBlank(parentId.toString())){
+						Integer useTime = Integer.parseInt(map.get("duration").toString());
+						if (useTime != null && useTime >= OVER_TIME) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

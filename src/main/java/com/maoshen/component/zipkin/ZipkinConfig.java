@@ -18,7 +18,7 @@ import okhttp3.OkHttpClient;
 
 @Configuration
 public class ZipkinConfig {
-	private final static Float DEFAULT_FLOAT = 0.0001F;
+	private final static Float DEFAULT_FLOAT = 1F;
 	@Autowired
 	private ZipkinDisconf zipkinDisconf;
 	
