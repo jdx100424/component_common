@@ -17,6 +17,7 @@ public class Stream2Test {
 		// 2.1 获取流
 		// 集合
 		List<Person> list = new ArrayList<Person>();
+		List<Person> list2 = new ArrayList<Person>();
 		Person p = stream2Test.new Person();
 		p.setId(1L);
 		p.setName("p");
@@ -33,10 +34,32 @@ public class Stream2Test {
 		p4.setId(3L);
 		p4.setName("p3");
 		p4.setStudent(true);
+		
+		Person pp = stream2Test.new Person();
+		pp.setId(1L);
+		pp.setName("p");
+		pp.setStudent(false);
+		Person pp2 = stream2Test.new Person();
+		pp2.setId(2L);
+		pp2.setName("p2");
+		pp2.setStudent(true);
+		Person pp3 = stream2Test.new Person();
+		pp3.setId(3L);
+		pp3.setName("p3");
+		pp3.setStudent(true);
+		Person pp4 = stream2Test.new Person();
+		pp4.setId(3L);
+		pp4.setName("p3");
+		pp4.setStudent(true);
+		
 		list.add(p);
 		list.add(p2);
 		list.add(p3);
 		list.add(p4);
+		list2.add(pp);
+		list2.add(pp2);
+		list2.add(pp3);
+		list2.add(pp4);
 
 		Stream<Person> stream = list.stream();
 
@@ -50,8 +73,13 @@ public class Stream2Test {
 		// 2.2
 		// 筛选filter,filter函数接收一个Lambda表达式作为参数，该表达式返回boolean，在执行过程中，流将元素逐一输送给filter，并筛选出执行结果为true的元素。
 		// 如，筛选出所有学生：
-		List<Person> resultFilter = list.stream().filter(pp -> pp.isStudent()).collect(Collectors.toList());
+		List<Person> resultFilter = list.stream().filter(ppp -> ppp.isStudent()).collect(Collectors.toList());
 		System.out.println(JSONObject.toJSONString(resultFilter));
+		
+		Stream<Person> jdxTest = list2.stream();
+		jdxTest.forEach(gogo -> gogo.setName(gogo.getName()+"wocao"));
+		System.out.println("wocao:"+JSONObject.toJSONString(list2));
+	
 
 		// 2.3 去重distinct,去掉重复的结果：
 		List<String> resultDistinct = Arrays.stream(names).distinct().collect(Collectors.toList());
@@ -116,6 +144,15 @@ public class Stream2Test {
 		//2.14.2 数值计算
 		OptionalLong maxAge = list.stream().mapToLong(Person::getId).max();
 		System.out.println(maxAge.getAsLong());
+		
+		//假设我们现在要统计一个List<Person>里面的男性个数，那么代码我们通常是这样写的。
+		//是否学生
+		long personCount = list.stream().filter(personCountObj -> personCountObj.isStudent()).count();  
+		System.out.println("学生人数："+personCount);
+		
+		//我们需要把里面的字母全部转换成大写，在Java8里，我们可以利用Steam这样写代码。
+		List<String> personList = list.stream().map(personString -> personString.setName(personString.getName()+"jdxGoGo")).collect(Collectors.toList()); 
+		System.out.println(JSONObject.toJSONString(personList));
 	}
 
 	public class Person {
@@ -143,8 +180,9 @@ public class Stream2Test {
 			return name;
 		}
 
-		public void setName(String name) {
+		public String setName(String name) {
 			this.name = name;
+			return name;
 		}
 
 		public boolean isStudent() {
