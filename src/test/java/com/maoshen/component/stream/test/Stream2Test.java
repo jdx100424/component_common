@@ -79,6 +79,13 @@ public class Stream2Test {
 		Stream<Person> jdxTest = list2.stream();
 		jdxTest.forEach(gogo -> gogo.setName(gogo.getName()+"wocao"));
 		System.out.println("wocao:"+JSONObject.toJSONString(list2));
+		
+		Stream<Person> jdxTest2 = list2.stream();
+		jdxTest2.forEach(gogo -> {
+			gogo.setName(gogo.getName()+"AAA");
+			gogo.setId(gogo.getId()+10000);
+		});
+		System.out.println("wocao2:"+JSONObject.toJSONString(list2));
 	
 
 		// 2.3 去重distinct,去掉重复的结果：
