@@ -208,4 +208,51 @@ public class RedisService {
 		}
 		return result;
 	}
+	
+	/**
+	 * redis lock
+	 * @param key
+	 */
+	public void lockByIncr(Object key){
+		String keyStr = key.toString();
+		boolean isLock = lockLogicByIncr(keyStr);
+		long last = System.currentTimeMillis();
+		while(!isLock){
+			try {
+				TimeUnit.MILLISECONDS.sleep(100);
+			} catch (InterruptedException e) {
+				
+			}
+			
+			if(System.currentTimeMillis()-last>TIMEOUT){
+				//锁超时
+				throw new RuntimeException("multi retry lock timeout!");
+			}
+			//重新获取锁
+			isLock=lockLogicByIncr(keyStr);
+		}
+	}
+	/**
+	 * 获取锁lock
+	 *@author vakinge
+	 * @param lockId
+	 * @param timeout 毫秒
+	 * @return 获得lock ＝＝ true  
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean lockLogicByIncr(Object key){
+		String keyStr = key.toString();
+		boolean result = false;
+		try {		
+			ValueOperations valueOperations = jedisTemplate.opsForValue();
+			Long l = valueOperations.increment(keyStr, 1);
+			if(l!=null && l.equals(1L)){
+				result = true;
+				jedisTemplate.expire(keyStr, TIMEOUT+2000, TIME_UNIT);
+			}
+		} finally {
+			
+		}
+		return result;
+	}
 }
