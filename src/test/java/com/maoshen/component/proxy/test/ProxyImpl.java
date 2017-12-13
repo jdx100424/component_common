@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-public class LogHandler implements InvocationHandler {
+public class ProxyImpl implements InvocationHandler {
 
 	private Object targetObject; // 将要代理的对象保存为成员变量
 	// 将被代理的对象传进来，通过这个方法生成代理对象
@@ -35,7 +35,7 @@ public class LogHandler implements InvocationHandler {
 	}
 
 	public static void main(String[] args) {
-		LogHandler logHandler = new LogHandler();
+		ProxyImpl logHandler = new ProxyImpl();
 		TestDao testDao = (TestDao) logHandler.newProxyInstance(new TestDaoImpl());
 		// userManager.addUser("0001", "张三");
 		String name = testDao.sayHello("jdx");
