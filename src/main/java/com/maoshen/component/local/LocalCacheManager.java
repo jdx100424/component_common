@@ -12,14 +12,22 @@ import com.google.common.cache.CacheBuilder;
  * @author daxian.jianglifesense.com
  *
  */
-public class LocalCacheObjectUtils {
-	public static Cache<String, Object> getInstance(){
-		return CacheBuilder.newBuilder().maximumSize(10000)
-				.expireAfterWrite(24, TimeUnit.HOURS).recordStats().build();
+public class LocalCacheManager {
+	private Cache<String, Object> cache;
+	
+	private LocalCacheManager(Cache<String, Object> cache){
+		this.cache = cache;
 	}
-	public static Cache<String, Object> getInstance(int maxSize,long time,TimeUnit timeUnit){
-		return CacheBuilder.newBuilder().maximumSize(maxSize)
+	
+	public static LocalCacheManager getInstance(){
+		Cache<String, Object> newCache = CacheBuilder.newBuilder().maximumSize(10000)
+				.expireAfterWrite(24, TimeUnit.HOURS).recordStats().build();
+		return new LocalCacheManager(newCache);
+	}
+	public static LocalCacheManager getInstance(int maxSize,long time,TimeUnit timeUnit){
+		Cache<String, Object> newCache = CacheBuilder.newBuilder().maximumSize(maxSize)
 				.expireAfterWrite(time,timeUnit).recordStats().build();
+		return new LocalCacheManager(newCache);
 	}
 	
 	/**
@@ -29,7 +37,7 @@ public class LocalCacheObjectUtils {
 	 * @return
 	 * @throws ExecutionException
 	 */
-	public static Object get(Cache<String, Object> cache , String key,Object defaultValue) throws ExecutionException {
+	public Object get(String key,Object defaultValue) throws ExecutionException {
 		Object var = cache.get(key, new Callable<Object>() {
 			@Override
 			public Object call() throws Exception {
@@ -38,15 +46,15 @@ public class LocalCacheObjectUtils {
 		});
 		return var;
 	}
-	public static Object get(Cache<String, Object> cache ,String key) throws ExecutionException {
-		return get(cache,key,null);
+	public Object get(String key) throws ExecutionException {
+		return get(key,null);
 	}
 
-	public static void put(Cache<String, Object> cache ,String key, Object value) {
+	public void put(String key, Object value) {
 		cache.put(key, value);
 	}
 	
-	public static long size(Cache<String, Object> cache){
+	public long size(){
 		return cache.size();
 	}
 }
