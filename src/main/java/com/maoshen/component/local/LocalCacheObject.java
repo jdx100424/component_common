@@ -12,7 +12,7 @@ import com.google.common.cache.CacheBuilder;
  * @author daxian.jianglifesense.com
  *
  */
-public class LocalCache {
+public class LocalCacheObject {
 	/**
 	 * 默认24小时过期
 	 */
@@ -41,5 +41,9 @@ public class LocalCache {
 
 	public static void put(String key, Object value) {
 		cache.put(key, value);
+	}
+	
+	public static long size(){
+		return cache.size();
 	}
 }
