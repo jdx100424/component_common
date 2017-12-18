@@ -13,16 +13,14 @@ import com.google.common.cache.CacheBuilder;
  *
  */
 public class LocalCacheManager {
-	private Cache<String, Object> cache;
+	protected Cache<String, Object> cache;
 	
-	private LocalCacheManager(Cache<String, Object> cache){
+	protected LocalCacheManager(Cache<String, Object> cache){
 		this.cache = cache;
 	}
 	
 	public static LocalCacheManager getInstance(){
-		Cache<String, Object> newCache = CacheBuilder.newBuilder().maximumSize(10000)
-				.expireAfterWrite(24, TimeUnit.HOURS).recordStats().build();
-		return new LocalCacheManager(newCache);
+		return getInstance(10000,24, TimeUnit.HOURS);
 	}
 	public static LocalCacheManager getInstance(int maxSize,long time,TimeUnit timeUnit){
 		Cache<String, Object> newCache = CacheBuilder.newBuilder().maximumSize(maxSize)
