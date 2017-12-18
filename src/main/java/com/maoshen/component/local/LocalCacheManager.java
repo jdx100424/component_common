@@ -37,16 +37,20 @@ public class LocalCacheManager {
 	 * @return
 	 * @throws ExecutionException
 	 */
-	public Object get(String key,Object defaultValue) throws ExecutionException {
-		Object var = cache.get(key, new Callable<Object>() {
-			@Override
-			public Object call() throws Exception {
-				return defaultValue;
-			}
-		});
+	public Object get(String key,Object defaultValue){
+		Object var = null;
+		try{
+			var = cache.get(key, new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					return defaultValue;
+				}
+			});
+		}catch(Exception e){
+		}
 		return var;
 	}
-	public Object get(String key) throws ExecutionException {
+	public Object get(String key) {
 		return get(key,null);
 	}
 
