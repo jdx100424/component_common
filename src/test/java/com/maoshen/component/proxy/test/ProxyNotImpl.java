@@ -42,7 +42,7 @@ public class ProxyNotImpl implements InvocationHandler {
 		return ret;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) { 
 		ProxyNotImpl logHandler = new ProxyNotImpl();
 		TestDao testDao = logHandler.newProxyInstance(TestDao.class);
 		// userManager.addUser("0001", "张三");
